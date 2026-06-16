@@ -564,8 +564,7 @@ function updateEqBar(){
     $eqChips.innerHTML=`<span class="placeholder">${hint}</span>`;
     $eqResult.textContent='—'; $eqResult.className=''; $btnGo.disabled=true; return;
   }
-  const sorted=[...selected].sort((a,b)=>a.id-b.id);
-  $eqChips.innerHTML=sorted.map(s=>{
+  $eqChips.innerHTML=selected.map(s=>{
     const st = s.type==='op' ? OP_CHIP : {bg:valStyle(s.val).bg, fg:valStyle(s.val).fg};
     const bg = st.bg, fg = st.fg || st.color || '#fff';
     return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;border-radius:8px;font-size:15px;font-weight:900;background:${bg};color:${fg}">${s.val}</span>`;
