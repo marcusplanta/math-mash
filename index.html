@@ -27,7 +27,6 @@ body{background:#1a0533;font-family:'Nunito',sans-serif;display:flex;justify-con
 }
 #target-card::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:rgba(168,85,247,.25);border-radius:50%}
 #target-label{font-size:11px;color:#c4b5fd;letter-spacing:.1em;text-transform:uppercase;font-weight:800;margin-bottom:4px}
-#target-num{font-size:52px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 20px rgba(168,85,247,.8)}
 #mode-pill{display:inline-block;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:800;background:rgba(255,255,255,.15);color:#e9d5ff}
 
 #xp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -67,12 +66,32 @@ body{background:#1a0533;font-family:'Nunito',sans-serif;display:flex;justify-con
 .tile::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .1s}
 .tile:active::after{background:rgba(255,255,255,.15)}
 
-.nc0{background:#7c3aed;color:#ede9fe;border-color:#a855f7}
-.nc1{background:#0891b2;color:#cffafe;border-color:#22d3ee}
-.nc2{background:#d97706;color:#fef3c7;border-color:#fbbf24}
-.nc3{background:#be185d;color:#fce7f3;border-color:#f472b6}
-.nc4{background:#15803d;color:#dcfce7;border-color:#4ade80}
-.oc{background:#1e3a5f;color:#bae6fd;border-color:#38bdf8;font-size:26px}
+/* value-based tile colors: v2–v20 */
+.v2 {background:#e11d48;color:#ffe4e6;border-color:#fb7185}
+.v3 {background:#ea580c;color:#fff7ed;border-color:#fb923c}
+.v4 {background:#d97706;color:#fefce8;border-color:#fbbf24}
+.v5 {background:#65a30d;color:#f7fee7;border-color:#a3e635}
+.v6 {background:#059669;color:#ecfdf5;border-color:#34d399}
+.v7 {background:#0891b2;color:#ecfeff;border-color:#22d3ee}
+.v8 {background:#2563eb;color:#eff6ff;border-color:#60a5fa}
+.v9 {background:#7c3aed;color:#f5f3ff;border-color:#a78bfa}
+.v10{background:#9d174d;color:#fdf2f8;border-color:#f472b6}
+.v11{background:#b91c1c;color:#fef2f2;border-color:#f87171}
+.v12{background:#c2410c;color:#fff7ed;border-color:#fdba74}
+.v13{background:#a16207;color:#fefce8;border-color:#fde047}
+.v14{background:#4d7c0f;color:#f7fee7;border-color:#86efac}
+.v15{background:#0f766e;color:#f0fdfa;border-color:#5eead4}
+.v16{background:#0369a1;color:#f0f9ff;border-color:#7dd3fc}
+.v17{background:#1d4ed8;color:#eff6ff;border-color:#93c5fd}
+.v18{background:#6d28d9;color:#f5f3ff;border-color:#c4b5fd}
+.v19{background:#86198f;color:#fdf4ff;border-color:#e879f9}
+.v20{background:#9f1239;color:#fff1f2;border-color:#fda4af}
+.oc {background:#1e3a5f;color:#bae6fd;border-color:#38bdf8;font-size:26px}
+
+@keyframes target-pulse{0%,100%{text-shadow:0 0 20px rgba(168,85,247,.8)}50%{text-shadow:0 0 40px rgba(168,85,247,1),0 0 60px rgba(236,72,153,.6)}}
+#target-num{font-size:52px;font-weight:900;color:#fff;line-height:1;animation:target-pulse 2s ease-in-out infinite}
+@keyframes hint-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+#target-card.hint{animation:hint-shake .4s ease}
 
 .tile.sel{transform:scale(1.12) translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4);border-color:#fff !important}
 .tile.bounce{animation:tbounce .3s cubic-bezier(.34,1.56,.64,1)}
@@ -171,25 +190,33 @@ body{background:#1a0533;font-family:'Nunito',sans-serif;display:flex;justify-con
 </div>
 
 <script>
-// ── Audio ─────────────────────────────────────────────────────────────────────
+// ── Audio (louder, with compressor to prevent clipping) ───────────────────────
 const AC = new (window.AudioContext || window.webkitAudioContext)();
+const compressor = AC.createDynamicsCompressor();
+compressor.threshold.value = -6;
+compressor.knee.value = 3;
+compressor.ratio.value = 4;
+compressor.attack.value = 0.002;
+compressor.release.value = 0.1;
+compressor.connect(AC.destination);
+
 function resumeAC(){ if(AC.state==='suspended') AC.resume(); }
-function playTone(freq,type,dur,vol=0.18,attack=0.01){
-  const o=AC.createOscillator(),g=AC.createGain();
-  o.connect(g);g.connect(AC.destination);
-  o.type=type;o.frequency.setValueAtTime(freq,AC.currentTime);
-  g.gain.setValueAtTime(0,AC.currentTime);
-  g.gain.linearRampToValueAtTime(vol,AC.currentTime+attack);
-  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
-  o.start();o.stop(AC.currentTime+dur+0.05);
+function playTone(freq, type, dur, vol=0.55, attack=0.01){
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.connect(g); g.connect(compressor);
+  o.type=type; o.frequency.setValueAtTime(freq, AC.currentTime);
+  g.gain.setValueAtTime(0, AC.currentTime);
+  g.gain.linearRampToValueAtTime(vol, AC.currentTime+attack);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+dur);
+  o.start(); o.stop(AC.currentTime+dur+0.05);
 }
-function playClick(){playTone(520,'sine',.08,.12,.005)}
-function playDeselect(){playTone(320,'sine',.06,.08,.005)}
-function playCorrect(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.2,.15,.01),i*60))}
-function playWrong(){playTone(180,'sawtooth',.15,.12,.01);setTimeout(()=>playTone(140,'sawtooth',.2,.1,.01),80)}
-function playLevelUp(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.35,.18,.01),i*80))}
-function playGameOver(){[440,370,311,262].forEach((f,i)=>setTimeout(()=>playTone(f,'sawtooth',.3,.12,.01),i*100))}
-function playTileSelect(i){playTone([440,494,523,587,659][i%5],'triangle',.1,.12,.005)}
+function playClick()    { playTone(600,'sine',.09,.5,.005) }
+function playDeselect() { playTone(350,'sine',.07,.4,.005) }
+function playCorrect()  { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.25,.6,.01),i*65)) }
+function playWrong()    { playTone(160,'sawtooth',.18,.55,.01); setTimeout(()=>playTone(120,'sawtooth',.22,.45,.01),90) }
+function playLevelUp()  { [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.4,.65,.01),i*80)) }
+function playGameOver() { [440,370,311,262].forEach((f,i)=>setTimeout(()=>playTone(f,'sawtooth',.35,.5,.01),i*110)) }
+function playTileSelect(val){ const freqs=[0,0,440,466,494,523,554,587,622,659,698,740,784,831,880,932,988,1047,1109,1175,1245]; playTone(freqs[Math.min(val,20)]||500,'triangle',.12,.5,.005) }
 
 // ── Starfield ─────────────────────────────────────────────────────────────────
 const bgC=document.getElementById('bg-canvas'),bgX=bgC.getContext('2d');
@@ -233,16 +260,38 @@ function drawStar(ctx,x,y,r,color,alpha){
   requestAnimationFrame(animP);
 })();
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const COLORS=['nc0','nc1','nc2','nc3','nc4'];
-const CHIP_STYLES={nc0:{bg:'#a855f7',color:'#ede9fe'},nc1:{bg:'#22d3ee',color:'#0e7490'},nc2:{bg:'#fbbf24',color:'#78350f'},nc3:{bg:'#f472b6',color:'#831843'},nc4:{bg:'#4ade80',color:'#14532d'},oc:{bg:'#38bdf8',color:'#0c4a6e'}};
-const BOARD_SIZE=16; // 4×4
+// ── Value → CSS class & chip colour ──────────────────────────────────────────
+// One unique colour per number value 2-20
+const VAL_STYLES = {
+  2: {cls:'v2', bg:'#e11d48', fg:'#ffe4e6'},
+  3: {cls:'v3', bg:'#ea580c', fg:'#fff7ed'},
+  4: {cls:'v4', bg:'#d97706', fg:'#fefce8'},
+  5: {cls:'v5', bg:'#65a30d', fg:'#f7fee7'},
+  6: {cls:'v6', bg:'#059669', fg:'#ecfdf5'},
+  7: {cls:'v7', bg:'#0891b2', fg:'#ecfeff'},
+  8: {cls:'v8', bg:'#2563eb', fg:'#eff6ff'},
+  9: {cls:'v9', bg:'#7c3aed', fg:'#f5f3ff'},
+  10:{cls:'v10',bg:'#9d174d', fg:'#fdf2f8'},
+  11:{cls:'v11',bg:'#b91c1c', fg:'#fef2f2'},
+  12:{cls:'v12',bg:'#c2410c', fg:'#fff7ed'},
+  13:{cls:'v13',bg:'#a16207', fg:'#fefce8'},
+  14:{cls:'v14',bg:'#4d7c0f', fg:'#f7fee7'},
+  15:{cls:'v15',bg:'#0f766e', fg:'#f0fdfa'},
+  16:{cls:'v16',bg:'#0369a1', fg:'#f0f9ff'},
+  17:{cls:'v17',bg:'#1d4ed8', fg:'#eff6ff'},
+  18:{cls:'v18',bg:'#6d28d9', fg:'#f5f3ff'},
+  19:{cls:'v19',bg:'#86198f', fg:'#fdf4ff'},
+  20:{cls:'v20',bg:'#9f1239', fg:'#fff1f2'},
+};
+function valStyle(v){ return VAL_STYLES[v] || {cls:'v9',bg:'#7c3aed',fg:'#f5f3ff'}; }
+const OP_CHIP = {bg:'#38bdf8', fg:'#0c4a6e'};
+const BOARD_SIZE = 16; // 4×4
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let level=1,score=0,xp=0,bestScore=0;
-let target=0,mode='sum',tiles=[],selected=[];
-let timerSecs=30,timeLeft=30,timerInt=null,gameActive=false;
-let solution=null; // the guaranteed solution combo [{id,val,type}...]
+let level=1, score=0, xp=0, bestScore=0;
+let target=0, mode='sum', tiles=[], selected=[];
+let timerSecs=30, timeLeft=30, timerInt=null, gameActive=false;
+let idleTimer=null;
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const $grid=document.getElementById('grid');
@@ -267,6 +316,17 @@ function xpNeeded(){return 200+level*100;}
 function timerForLevel(){return Math.max(15,30-Math.floor(level/3));}
 function ptsFor(opCount){return Math.floor((80+level*20)*(1+opCount*.2));}
 
+function resetIdleHint(){
+  clearTimeout(idleTimer);
+  const card=document.getElementById('target-card');
+  card.classList.remove('hint');
+  if(!gameActive) return;
+  idleTimer=setTimeout(()=>{
+    card.classList.add('hint');
+    setTimeout(()=>card.classList.remove('hint'),500);
+  },8000);
+}
+
 // ── Evaluate a sequence of tile objects left-to-right ────────────────────────
 // seq: [{type:'num'|'op', val}...] alternating num op num [op num ...]
 // Returns integer result or null if invalid
@@ -290,11 +350,11 @@ function evalSeq(seq){
   return r;
 }
 
-// ── Board-first generation: build board, find valid exprs, pick target ────────
+// ── Board-first generation ─────────────────────────────────────────────────────
 function genLevel(){
-  if(level>=5)       mode='chain';
-  else if(level>=3)  mode='ops';
-  else               mode='sum';
+  if(level>=5)      mode='chain';
+  else if(level>=3) mode='ops';
+  else              mode='sum';
 
   selected=[];
   timerSecs=timerForLevel();
@@ -304,39 +364,54 @@ function genLevel(){
   const opPool=['+','−','×'];
   if(level>=4) opPool.push('÷');
 
-  // Build a fresh 4×4 board
-  // Sum mode: all num tiles. Ops/chain: alternating num op num op...
   let boardTiles=[];
+
   if(mode==='sum'){
+    // 16 number tiles, all value-coloured
     for(let i=0;i<BOARD_SIZE;i++){
-      boardTiles.push({id:i,type:'num',val:rng(2,maxNum),col:COLORS[i%5]});
+      const v=rng(2,maxNum);
+      boardTiles.push({id:i,type:'num',val:v,col:valStyle(v).cls});
     }
     $modePill.textContent='+ sum mode';
+
   } else {
-    // 8 num tiles + 8 op tiles in alternating positions
-    for(let i=0;i<BOARD_SIZE;i++){
-      if(i%2===0) boardTiles.push({id:i,type:'num',val:rng(2,maxNum),col:COLORS[Math.floor(i/2)%5]});
-      else         boardTiles.push({id:i,type:'op', val:opPool[rng(0,opPool.length-1)],col:'oc'});
+    // 8 num tiles + 8 op tiles
+    // For chain: exactly 2 of each available operator (lean, not wasteful)
+    // For ops:  pick ops freely but still only 8
+    const nums=[];
+    for(let i=0;i<8;i++){
+      const v=rng(2,maxNum);
+      nums.push({id:i*2,type:'num',val:v,col:valStyle(v).cls});
+    }
+
+    let ops=[];
+    if(mode==='chain'){
+      // 2 of each op, shuffled, trimmed to 8
+      let pool=[];
+      opPool.forEach(op=>{pool.push(op,op);}); // e.g. ['+','+','−','−','×','×','÷','÷']
+      // shuffle
+      for(let i=pool.length-1;i>0;i--){const j=rng(0,i);[pool[i],pool[j]]=[pool[j],pool[i]];}
+      pool=pool.slice(0,8);
+      ops=pool.map((op,i)=>({id:i*2+1,type:'op',val:op,col:'oc'}));
+    } else {
+      for(let i=0;i<8;i++) ops.push({id:i*2+1,type:'op',val:opPool[rng(0,opPool.length-1)],col:'oc'});
+    }
+
+    // Interleave: num, op, num, op … into 16 slots
+    for(let i=0;i<8;i++){
+      boardTiles.push(nums[i]);
+      boardTiles.push(ops[i]);
     }
     $modePill.textContent=mode==='ops'?'± ops mode':'chain mode!';
   }
 
-  // Find all valid expressions from this board and pick one with result >= 10
   const validExprs=findValidExprs(boardTiles,mode,opPool);
+  if(!validExprs.length){ genLevel(); return; }
 
-  if(!validExprs.length){
-    // Shouldn't happen, but regenerate if somehow none found
-    genLevel(); return;
-  }
-
-  // Prefer expressions with result >= 10; shuffle and pick
   const good=validExprs.filter(e=>e.result>=10);
-  const pool=good.length?good:validExprs;
-  // Shuffle
-  for(let i=pool.length-1;i>0;i--){const j=rng(0,i);[pool[i],pool[j]]=[pool[j],pool[i]];}
-  const chosen=pool[0];
-  target=chosen.result;
-  solution=chosen.seq; // store for debug / hint purposes
+  const pool2=good.length?good:validExprs;
+  for(let i=pool2.length-1;i>0;i--){const j=rng(0,i);[pool2[i],pool2[j]]=[pool2[j],pool2[i]];}
+  target=pool2[0].result;
 
   tiles=boardTiles;
   $targetNum.textContent=target;
@@ -344,6 +419,7 @@ function genLevel(){
   updateXp();
   renderGrid();
   resetTimer();
+  resetIdleHint();
   gameActive=true;
 }
 
@@ -434,6 +510,7 @@ function renderGrid(){
 
 function onTileClick(t,el){
   resumeAC();
+  resetIdleHint();
   const idx=selected.findIndex(s=>s.id===t.id);
   if(idx>=0){
     selected.splice(idx,1);
@@ -444,12 +521,9 @@ function onTileClick(t,el){
       if(t.type==='op') return;
       if(selected.filter(s=>s.type==='num').length>=5) return;
     } else {
-      // must alternate: last in selection and new tile can't be same type
       const selSorted=[...selected,t].sort((a,b)=>a.id-b.id);
-      // Check the full sorted sequence would be valid so far
       for(let i=0;i<selSorted.length;i++){
-        const expected=i%2===0?'num':'op';
-        if(selSorted[i].type!==expected){
+        if(selSorted[i].type!==(i%2===0?'num':'op')){
           el.classList.add('wrong-anim');
           setTimeout(()=>el.classList.remove('wrong-anim'),400);
           return;
@@ -458,8 +532,9 @@ function onTileClick(t,el){
     }
     selected.push(t);
     el.classList.add('sel');
-    el.classList.remove('bounce');void el.offsetWidth;el.classList.add('bounce');
-    playTileSelect(COLORS.indexOf(t.col));
+    el.classList.remove('bounce'); void el.offsetWidth; el.classList.add('bounce');
+    // Play a note pitched to the tile's value
+    playTileSelect(t.type==='num'?t.val:0);
   }
   updateEqBar();
 }
@@ -467,12 +542,13 @@ function onTileClick(t,el){
 function updateEqBar(){
   if(!selected.length){
     $eqChips.innerHTML='<span class="placeholder">tap tiles to build an equation</span>';
-    $eqResult.textContent='—';$eqResult.className='';$btnGo.disabled=true;return;
+    $eqResult.textContent='—'; $eqResult.className=''; $btnGo.disabled=true; return;
   }
   const sorted=[...selected].sort((a,b)=>a.id-b.id);
   $eqChips.innerHTML=sorted.map(s=>{
-    const st=CHIP_STYLES[s.col]||{bg:'#555',color:'#fff'};
-    return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;border-radius:8px;font-size:15px;font-weight:900;background:${st.bg};color:${st.color}">${s.val}</span>`;
+    const st = s.type==='op' ? OP_CHIP : {bg:valStyle(s.val).bg, fg:valStyle(s.val).fg};
+    const bg = st.bg, fg = st.fg || st.color || '#fff';
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;border-radius:8px;font-size:15px;font-weight:900;background:${bg};color:${fg}">${s.val}</span>`;
   }).join('');
   const res=evalSelected();
   if(res===null){$eqResult.textContent='?';$eqResult.className='';$btnGo.disabled=true;}
@@ -513,50 +589,45 @@ function onSubmit(){
     selected=[];
 
     setTimeout(()=>{
-      // Remove used tiles and refill
       tiles=tiles.filter(t=>!removedIds.has(t.id));
       const maxNum=Math.min(3+level*2,20);
-      const opPool=['+','−','×'];if(level>=4) opPool.push('÷');
+      const opPool=['+','−','×']; if(level>=4) opPool.push('÷');
 
       while(tiles.length<BOARD_SIZE){
         const newId=Date.now()+Math.random();
         if(mode==='sum'){
-          tiles.push({id:newId,type:'num',val:rng(2,maxNum),col:COLORS[tiles.length%5]});
+          const v=rng(2,maxNum);
+          tiles.push({id:newId,type:'num',val:v,col:valStyle(v).cls});
         } else {
-          // maintain alternating pattern by looking at current tile count parity
           const numCount=tiles.filter(t=>t.type==='num').length;
           const opCount2=tiles.filter(t=>t.type==='op').length;
           if(numCount<=opCount2){
-            tiles.push({id:newId,type:'num',val:rng(2,maxNum),col:COLORS[numCount%5]});
+            const v=rng(2,maxNum);
+            tiles.push({id:newId,type:'num',val:v,col:valStyle(v).cls});
           } else {
             tiles.push({id:newId,type:'op',val:opPool[rng(0,opPool.length-1)],col:'oc'});
           }
         }
       }
 
-      // Verify the new board still has a solution for the SAME target
-      // If not, pick a new valid target from the current board
+      // Re-verify target is still reachable; if not, pick a new one
       const exprs=findValidExprs(tiles,mode,opPool);
-      if(exprs.length){
-        const matching=exprs.filter(e=>e.result===target);
-        if(!matching.length){
-          // Existing target no longer solvable — pick a new one
-          const good=exprs.filter(e=>e.result>=10);
-          const pick=(good.length?good:exprs)[rng(0,Math.min((good.length||exprs.length)-1,5))];
-          target=pick.result;
-          solution=pick.seq;
-          $targetNum.textContent=target;
-        }
+      if(exprs.length && !exprs.find(e=>e.result===target)){
+        const good=exprs.filter(e=>e.result>=10);
+        const pick=(good.length?good:exprs)[rng(0,Math.min((good.length||exprs.length)-1,4))];
+        target=pick.result;
+        $targetNum.textContent=target;
       }
 
       updateXp();
+      resetIdleHint();
       if(xp>=xpNeeded()){
-        xp=0;level++;
+        xp=0; level++;
         playLevelUp();
         burst(window.innerWidth/2,window.innerHeight/2,BURST_COLORS,50);
         genLevel();
       } else {
-        renderGrid();updateEqBar();
+        renderGrid(); updateEqBar();
       }
     },380);
 
@@ -591,6 +662,7 @@ function resetTimer(){
 }
 
 function gameOver(){
+  clearTimeout(idleTimer);
   playGameOver();
   if(score>bestScore) bestScore=score;
   document.getElementById('over-lvl').textContent=level;
