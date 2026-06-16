@@ -2,474 +2,615 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Math Mash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>MathCrush</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#F1EFE8;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-#wrap{width:360px;padding:10px;background:#FBEAF0;border-radius:20px;min-height:600px;position:relative}
+html,body{height:100%;overflow:hidden}
+body{background:#1a0533;font-family:'Nunito',sans-serif;display:flex;justify-content:center;align-items:flex-start;min-height:100vh}
 
-/* top bar */
-#topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-#lvl-badge{background:#AFA9EC;color:#26215C;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
-#score-box{background:#9FE1CB;color:#04342C;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
-#best-box{background:#FAC775;color:#412402;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;width:100%;max-width:420px;padding:12px;min-height:100vh}
 
-/* target card */
-#target-card{background:#534AB7;border-radius:14px;padding:10px 14px;margin-bottom:8px;text-align:center}
-#target-label{font-size:11px;color:#CECBF6;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
-#target-num{font-size:44px;font-weight:600;color:#fff;line-height:1}
-#mode-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#534AB7;margin-top:4px;display:inline-block}
+#header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hbadge{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:800;letter-spacing:.02em}
+#lvl-badge{background:#7c3aed;color:#e9d5ff;border:2px solid #a855f7}
+#score-badge{background:#0e7490;color:#cffafe;border:2px solid #22d3ee}
+#best-badge{background:#b45309;color:#fef3c7;border:2px solid #fbbf24}
 
-/* xp bar */
-#xp-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-#xp-bar-wrap{flex:1;height:10px;background:#F4C0D1;border-radius:6px;overflow:hidden}
-#xp-bar{height:100%;background:#D4537E;border-radius:6px;transition:width .4s ease}
-#xp-label{font-size:11px;color:#72243E;font-weight:600;white-space:nowrap}
+#target-card{
+  background:linear-gradient(135deg,#4c1d95,#7c3aed);
+  border:3px solid #a855f7;border-radius:20px;
+  padding:14px 18px;margin-bottom:10px;
+  text-align:center;position:relative;overflow:hidden
+}
+#target-card::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:rgba(168,85,247,.25);border-radius:50%}
+#target-label{font-size:11px;color:#c4b5fd;letter-spacing:.1em;text-transform:uppercase;font-weight:800;margin-bottom:4px}
+#target-num{font-size:52px;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 20px rgba(168,85,247,.8)}
+#mode-pill{display:inline-block;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:800;background:rgba(255,255,255,.15);color:#e9d5ff}
 
-/* timer */
-#timer-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-#timer-wrap{flex:1;height:8px;background:#C0DD97;border-radius:4px;overflow:hidden}
-#timer-bar{height:100%;background:#3B6D11;border-radius:4px;transition:width .1s linear,background .3s}
-#timer-label{font-size:12px;font-weight:600;color:#27500A;min-width:28px;text-align:right}
+#xp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#xp-wrap{flex:1;height:12px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.15)}
+#xp-fill{height:100%;background:linear-gradient(90deg,#ec4899,#f97316);border-radius:6px;transition:width .4s ease}
+#xp-txt{font-size:11px;color:#f9a8d4;font-weight:800;white-space:nowrap}
 
-/* selection row */
-#sel-row{min-height:44px;background:#fff;border-radius:12px;border:2px solid #F4C0D1;display:flex;align-items:center;gap:6px;padding:6px 10px;margin-bottom:8px;flex-wrap:wrap}
-#sel-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1}
-#sel-val{font-size:15px;font-weight:600;color:#888780;min-width:44px;text-align:right;white-space:nowrap}
-#sel-val.match{color:#0F6E56}
-#sel-val.over{color:#A32D2D}
+#timer-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+#timer-wrap{flex:1;height:10px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.15)}
+#timer-fill{height:100%;background:#22c55e;border-radius:6px;transition:width .1s linear,background .4s}
+#timer-txt{font-size:13px;color:#86efac;font-weight:900;min-width:30px;text-align:right}
 
-/* grid */
-#grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:8px}
-.tile{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;cursor:pointer;transition:transform .1s,opacity .2s;user-select:none;border:2.5px solid transparent}
-.tile:active{transform:scale(.9)}
-.tile.num0{background:#EEEDFE;color:#26215C;border-color:#AFA9EC}
-.tile.num1{background:#E1F5EE;color:#04342C;border-color:#5DCAA5}
-.tile.num2{background:#FAEEDA;color:#412402;border-color:#EF9F27}
-.tile.num3{background:#FBEAF0;color:#4B1528;border-color:#ED93B1}
-.tile.num4{background:#EAF3DE;color:#173404;border-color:#97C459}
-.tile.op{background:#E6F1FB;color:#042C53;border-color:#85B7EB;font-size:20px}
-.tile.selected{transform:scale(1.08);border-width:2.5px;box-shadow:0 0 0 3px rgba(83,74,183,.25)}
-.tile.num0.selected{border-color:#534AB7;background:#CECBF6}
-.tile.num1.selected{border-color:#1D9E75;background:#9FE1CB}
-.tile.num2.selected{border-color:#BA7517;background:#FAC775}
-.tile.num3.selected{border-color:#D4537E;background:#F4C0D1}
-.tile.num4.selected{border-color:#639922;background:#C0DD97}
-.tile.op.selected{border-color:#185FA5;background:#B5D4F4}
-.tile.clearing{animation:pop .35s ease forwards}
-.tile.wrong{animation:shake .35s ease}
-.tile.new-in{animation:dropin .3s ease}
-@keyframes pop{0%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.5}100%{transform:scale(0);opacity:0}}
-@keyframes shake{0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}100%{transform:translateX(0)}}
-@keyframes dropin{0%{transform:translateY(-14px);opacity:0}100%{transform:translateY(0);opacity:1}}
+#eq-bar{
+  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.2);
+  border-radius:16px;padding:10px 14px;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;min-height:52px;flex-wrap:wrap
+}
+#eq-chips{display:flex;flex-wrap:wrap;gap:5px;flex:1;align-items:center}
+#eq-chips .placeholder{font-size:13px;color:rgba(255,255,255,.3);font-weight:700}
+#eq-result{font-size:18px;font-weight:900;color:rgba(255,255,255,.5);min-width:54px;text-align:right;white-space:nowrap}
+#eq-result.match{color:#4ade80}
+#eq-result.over{color:#f87171}
+#eq-result.under{color:#fbbf24}
 
-/* buttons */
-#btns{display:flex;gap:6px}
-#btns button{flex:1;padding:11px;border-radius:12px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:transform .1s}
-#btns button:active{transform:scale(.96)}
-#btn-clear{background:#F4C0D1;color:#4B1528}
-#btn-submit{background:#534AB7;color:#fff}
-#btn-submit:disabled{background:#D3D1C7;color:#888780;cursor:default}
+/* 4x4 grid */
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 
-.chip{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 5px;border-radius:6px;font-size:13px;font-weight:600}
+.tile{
+  aspect-ratio:1;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;
+  cursor:pointer;user-select:none;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1);
+  border:3px solid transparent;
+  position:relative;overflow:hidden
+}
+.tile::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .1s}
+.tile:active::after{background:rgba(255,255,255,.15)}
 
-/* toast */
-#toast{position:absolute;bottom:0;left:50%;transform:translateX(-50%) translateY(60px);background:#534AB7;color:#fff;padding:7px 18px;border-radius:20px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;z-index:99}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(-16px)}
+.nc0{background:#7c3aed;color:#ede9fe;border-color:#a855f7}
+.nc1{background:#0891b2;color:#cffafe;border-color:#22d3ee}
+.nc2{background:#d97706;color:#fef3c7;border-color:#fbbf24}
+.nc3{background:#be185d;color:#fce7f3;border-color:#f472b6}
+.nc4{background:#15803d;color:#dcfce7;border-color:#4ade80}
+.oc{background:#1e3a5f;color:#bae6fd;border-color:#38bdf8;font-size:26px}
 
-/* game over screen */
-#screen-game{display:block}
-#screen-over{display:none;text-align:center;padding:2rem 1rem}
-#screen-over h2{font-size:32px;font-weight:600;color:#534AB7;margin-bottom:4px}
-#screen-over .sub{font-size:14px;color:#993556;margin-bottom:20px}
-.stat-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:2px solid #CECBF6}
-.stat-card .lbl{font-size:12px;color:#888780;margin-bottom:4px}
-.stat-card .val{font-size:28px;font-weight:600;color:#534AB7}
-#btn-restart{background:#534AB7;color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
+.tile.sel{transform:scale(1.12) translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4);border-color:#fff !important}
+.tile.bounce{animation:tbounce .3s cubic-bezier(.34,1.56,.64,1)}
+.tile.wrong-anim{animation:twrong .4s ease}
+.tile.pop-out{animation:tpop .4s ease forwards}
+.tile.drop-in{animation:tdrop .35s cubic-bezier(.34,1.56,.64,1)}
+
+@keyframes tbounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2) translateY(-4px)}}
+@keyframes twrong{0%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}100%{transform:translateX(0)}}
+@keyframes tpop{0%{transform:scale(1);opacity:1}40%{transform:scale(1.35);opacity:.8}100%{transform:scale(0);opacity:0}}
+@keyframes tdrop{0%{transform:scale(.5) translateY(-20px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+
+#btn-row{display:flex;gap:8px}
+.btn{flex:1;padding:13px;border-radius:14px;border:none;font-size:15px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;transition:transform .1s,box-shadow .1s;letter-spacing:.02em}
+.btn:active{transform:scale(.95)}
+#btn-clear{background:#374151;color:#d1d5db;border:2px solid #4b5563}
+#btn-clear:active{background:#4b5563}
+#btn-go{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border:2px solid #a855f7;box-shadow:0 4px 15px rgba(236,72,153,.4)}
+#btn-go:disabled{background:#374151;color:#6b7280;border-color:#4b5563;box-shadow:none;cursor:default}
+
+#particle-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+#screen-over{display:none;position:fixed;inset:0;z-index:100;background:rgba(10,0,25,.9);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem}
+#screen-over.show{display:flex}
+.over-card{background:linear-gradient(135deg,#1e1047,#2d1060);border:3px solid #7c3aed;border-radius:24px;padding:2rem;width:100%;max-width:360px}
+.over-star{font-size:64px;margin-bottom:8px;animation:star-spin 1s ease}
+@keyframes star-spin{0%{transform:scale(0) rotate(-180deg)}100%{transform:scale(1) rotate(0)}}
+.over-title{font-size:36px;font-weight:900;color:#e9d5ff;margin-bottom:4px}
+.over-sub{font-size:14px;color:#a78bfa;margin-bottom:20px;font-weight:700}
+.stat-row{display:flex;gap:10px;margin-bottom:10px}
+.stat-box{flex:1;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:12px}
+.stat-box .sl{font-size:11px;color:#a78bfa;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.stat-box .sv{font-size:26px;font-weight:900;color:#fff}
+#btn-restart{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;font-size:18px;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:4px;letter-spacing:.03em;box-shadow:0 4px 20px rgba(124,58,237,.5)}
 #btn-restart:active{transform:scale(.97)}
+
+@keyframes screen-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+#app.shaking{animation:screen-shake .35s ease}
+
+.score-pop{position:fixed;font-size:24px;font-weight:900;color:#fbbf24;pointer-events:none;z-index:200;text-shadow:0 2px 8px rgba(0,0,0,.5);animation:score-float 1.2s ease forwards}
+@keyframes score-float{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-80px) scale(1.3);opacity:0}}
 </style>
 </head>
 <body>
-<div id="wrap">
-  <div id="screen-game">
-    <div id="topbar">
-      <div id="lvl-badge">Level <span id="lvl-num">1</span></div>
-      <div id="score-box">Score: <span id="score-val">0</span></div>
-      <div id="best-box">Best: <span id="best-val">0</span></div>
-    </div>
 
-    <div id="target-card">
-      <div id="target-label">make this number</div>
-      <div id="target-num">—</div>
-      <div id="mode-badge">+ sum mode</div>
-    </div>
+<canvas id="bg-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
 
-    <div id="xp-row">
-      <div id="xp-bar-wrap"><div id="xp-bar" style="width:0%"></div></div>
-      <div id="xp-label">0 / 300 xp</div>
-    </div>
-
-    <div id="timer-row">
-      <div id="timer-wrap"><div id="timer-bar"></div></div>
-      <div id="timer-label">30s</div>
-    </div>
-
-    <div id="sel-row">
-      <div id="sel-chips"><span style="font-size:12px;color:#B4B2A9">tap tiles to select</span></div>
-      <div id="sel-val">—</div>
-    </div>
-
-    <div id="grid"></div>
-
-    <div id="btns">
-      <button id="btn-clear">Clear</button>
-      <button id="btn-submit" disabled>Submit!</button>
-    </div>
+<div id="app">
+  <div id="header">
+    <div class="hbadge" id="lvl-badge">LVL <span id="lvl-num">1</span></div>
+    <div class="hbadge" id="score-badge">⭐ <span id="score-val">0</span></div>
+    <div class="hbadge" id="best-badge">🏆 <span id="best-val">0</span></div>
   </div>
 
-  <div id="screen-over">
-    <div style="font-size:48px;margin-bottom:8px">&#9733;</div>
-    <h2>Game over!</h2>
-    <div class="sub">You reached level <span id="over-lvl">1</span></div>
-    <div class="stat-card"><div class="lbl">Your score</div><div class="val" id="over-score">0</div></div>
-    <div class="stat-card"><div class="lbl">Best score ever</div><div class="val" id="over-best">0</div></div>
-    <button id="btn-restart">Play again</button>
+  <div id="target-card">
+    <div id="target-label">make this number</div>
+    <div id="target-num">—</div>
+    <div id="mode-pill">sum mode</div>
   </div>
 
-  <div id="toast"></div>
+  <div id="xp-row">
+    <div id="xp-wrap"><div id="xp-fill" style="width:0%"></div></div>
+    <div id="xp-txt">0 / 300 to level up</div>
+  </div>
+
+  <div id="timer-row">
+    <div id="timer-wrap"><div id="timer-fill"></div></div>
+    <div id="timer-txt">30s</div>
+  </div>
+
+  <div id="eq-bar">
+    <div id="eq-chips"><span class="placeholder">tap tiles to build an equation</span></div>
+    <div id="eq-result">—</div>
+  </div>
+
+  <div id="grid"></div>
+
+  <div id="btn-row">
+    <button class="btn" id="btn-clear">✕ Clear</button>
+    <button class="btn" id="btn-go" disabled>Check it! →</button>
+  </div>
+</div>
+
+<div id="screen-over">
+  <div class="over-card">
+    <div class="over-star">⭐</div>
+    <div class="over-title">Game Over!</div>
+    <div class="over-sub">You reached level <span id="over-lvl">1</span></div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="sl">Score</div><div class="sv" id="over-score">0</div></div>
+      <div class="stat-box"><div class="sl">Best ever</div><div class="sv" id="over-best">0</div></div>
+    </div>
+    <button id="btn-restart">Play Again 🚀</button>
+  </div>
 </div>
 
 <script>
-const TILE_COLORS = ['num0','num1','num2','num3','num4'];
-let level=1, score=0, xp=0, bestScore=0, streak=0;
-let target=0, mode='sum', tiles=[], selected=[], timerSecs=30, timeLeft=30;
-let timerInt=null, toastT=null, gameActive=false;
+// ── Audio ─────────────────────────────────────────────────────────────────────
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+function resumeAC(){ if(AC.state==='suspended') AC.resume(); }
+function playTone(freq,type,dur,vol=0.18,attack=0.01){
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type=type;o.frequency.setValueAtTime(freq,AC.currentTime);
+  g.gain.setValueAtTime(0,AC.currentTime);
+  g.gain.linearRampToValueAtTime(vol,AC.currentTime+attack);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
+  o.start();o.stop(AC.currentTime+dur+0.05);
+}
+function playClick(){playTone(520,'sine',.08,.12,.005)}
+function playDeselect(){playTone(320,'sine',.06,.08,.005)}
+function playCorrect(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.2,.15,.01),i*60))}
+function playWrong(){playTone(180,'sawtooth',.15,.12,.01);setTimeout(()=>playTone(140,'sawtooth',.2,.1,.01),80)}
+function playLevelUp(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.35,.18,.01),i*80))}
+function playGameOver(){[440,370,311,262].forEach((f,i)=>setTimeout(()=>playTone(f,'sawtooth',.3,.12,.01),i*100))}
+function playTileSelect(i){playTone([440,494,523,587,659][i%5],'triangle',.1,.12,.005)}
 
-const $grid        = document.getElementById('grid');
-const $target      = document.getElementById('target-num');
-const $selChips    = document.getElementById('sel-chips');
-const $selVal      = document.getElementById('sel-val');
-const $btnSubmit   = document.getElementById('btn-submit');
-const $btnClear    = document.getElementById('btn-clear');
-const $scoreVal    = document.getElementById('score-val');
-const $bestVal     = document.getElementById('best-val');
-const $lvlNum      = document.getElementById('lvl-num');
-const $xpBar       = document.getElementById('xp-bar');
-const $xpLabel     = document.getElementById('xp-label');
-const $timerBar    = document.getElementById('timer-bar');
-const $timerLabel  = document.getElementById('timer-label');
-const $modeBadge   = document.getElementById('mode-badge');
-const $toast       = document.getElementById('toast');
-const $gameScreen  = document.getElementById('screen-game');
-const $overScreen  = document.getElementById('screen-over');
-const $overLvl     = document.getElementById('over-lvl');
-const $overScore   = document.getElementById('over-score');
-const $overBest    = document.getElementById('over-best');
+// ── Starfield ─────────────────────────────────────────────────────────────────
+const bgC=document.getElementById('bg-canvas'),bgX=bgC.getContext('2d');
+let stars=[];
+function resizeBg(){
+  bgC.width=window.innerWidth;bgC.height=window.innerHeight;
+  stars=Array.from({length:80},()=>({x:Math.random()*bgC.width,y:Math.random()*bgC.height,r:Math.random()*1.8+.3,s:Math.random()*.4+.1,pulse:Math.random()*Math.PI*2}));
+}
+resizeBg();window.addEventListener('resize',resizeBg);
+(function animBg(){
+  bgX.clearRect(0,0,bgC.width,bgC.height);
+  stars.forEach(s=>{s.pulse+=s.s*.03;bgX.beginPath();bgX.arc(s.x,s.y,s.r,0,Math.PI*2);bgX.fillStyle=`rgba(200,170,255,${.4+Math.sin(s.pulse)*.35})`;bgX.fill()});
+  requestAnimationFrame(animBg);
+})();
 
-function rng(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
-function xpNeeded() { return 200 + level * 100; }
-function timerForLevel() { return Math.max(15, 30 - Math.floor(level / 3)); }
-function ptsForSolve() { return Math.floor((100 + level * 25) * (streak >= 3 ? 2 : streak >= 2 ? 1.5 : 1)); }
+// ── Particles ─────────────────────────────────────────────────────────────────
+const pC=document.getElementById('particle-canvas'),pX=pC.getContext('2d');
+let particles=[];
+function resizePC(){pC.width=window.innerWidth;pC.height=window.innerHeight;}
+resizePC();window.addEventListener('resize',resizePC);
+const BURST_COLORS=['#a855f7','#ec4899','#fbbf24','#4ade80','#22d3ee','#f97316','#fff'];
+function burst(x,y,colors,count=18){
+  for(let i=0;i<count;i++){
+    const angle=Math.random()*Math.PI*2,speed=3+Math.random()*6;
+    particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-3,r:4+Math.random()*6,color:colors[Math.floor(Math.random()*colors.length)],life:1,decay:.025+Math.random()*.015,gravity:.18,shape:Math.random()>.5?'circle':'star'});
+  }
+}
+function drawStar(ctx,x,y,r,color,alpha){
+  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();
+  for(let i=0;i<5;i++){const a=Math.PI/2+i*Math.PI*2/5,b=a+Math.PI/5;if(i===0)ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a));else ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));ctx.lineTo(x+r*.4*Math.cos(b),y+r*.4*Math.sin(b));}
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+(function animP(){
+  pX.clearRect(0,0,pC.width,pC.height);
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=p.gravity;p.vx*=.97;p.life-=p.decay;
+    if(p.shape==='star')drawStar(pX,p.x,p.y,p.r,p.color,p.life);
+    else{pX.beginPath();pX.arc(p.x,p.y,p.r,0,Math.PI*2);pX.fillStyle=p.color;pX.globalAlpha=p.life;pX.fill();pX.globalAlpha=1;}
+  });
+  requestAnimationFrame(animP);
+})();
 
-function showToast(msg, bg) {
-  $toast.textContent = msg;
-  $toast.style.background = bg || '#534AB7';
-  $toast.classList.add('show');
-  clearTimeout(toastT);
-  toastT = setTimeout(() => $toast.classList.remove('show'), 1500);
+// ── Constants ─────────────────────────────────────────────────────────────────
+const COLORS=['nc0','nc1','nc2','nc3','nc4'];
+const CHIP_STYLES={nc0:{bg:'#a855f7',color:'#ede9fe'},nc1:{bg:'#22d3ee',color:'#0e7490'},nc2:{bg:'#fbbf24',color:'#78350f'},nc3:{bg:'#f472b6',color:'#831843'},nc4:{bg:'#4ade80',color:'#14532d'},oc:{bg:'#38bdf8',color:'#0c4a6e'}};
+const BOARD_SIZE=16; // 4×4
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let level=1,score=0,xp=0,bestScore=0;
+let target=0,mode='sum',tiles=[],selected=[];
+let timerSecs=30,timeLeft=30,timerInt=null,gameActive=false;
+let solution=null; // the guaranteed solution combo [{id,val,type}...]
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const $grid=document.getElementById('grid');
+const $targetNum=document.getElementById('target-num');
+const $eqChips=document.getElementById('eq-chips');
+const $eqResult=document.getElementById('eq-result');
+const $btnGo=document.getElementById('btn-go');
+const $btnClear=document.getElementById('btn-clear');
+const $scoreVal=document.getElementById('score-val');
+const $bestVal=document.getElementById('best-val');
+const $lvlNum=document.getElementById('lvl-num');
+const $xpFill=document.getElementById('xp-fill');
+const $xpTxt=document.getElementById('xp-txt');
+const $timerFill=document.getElementById('timer-fill');
+const $timerTxt=document.getElementById('timer-txt');
+const $modePill=document.getElementById('mode-pill');
+const $app=document.getElementById('app');
+const $over=document.getElementById('screen-over');
+
+function rng(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function xpNeeded(){return 200+level*100;}
+function timerForLevel(){return Math.max(15,30-Math.floor(level/3));}
+function ptsFor(opCount){return Math.floor((80+level*20)*(1+opCount*.2));}
+
+// ── Evaluate a sequence of tile objects left-to-right ────────────────────────
+// seq: [{type:'num'|'op', val}...] alternating num op num [op num ...]
+// Returns integer result or null if invalid
+function evalSeq(seq){
+  if(!seq||!seq.length) return null;
+  if(seq[0].type!=='num') return null;
+  // must end on num, alternate types
+  for(let i=0;i<seq.length;i++){
+    if(i%2===0&&seq[i].type!=='num') return null;
+    if(i%2===1&&seq[i].type!=='op') return null;
+  }
+  if(seq[seq.length-1].type!=='num') return null;
+  let r=seq[0].val;
+  for(let i=1;i<seq.length-1;i+=2){
+    const op=seq[i].val,n=seq[i+1].val;
+    if(op==='+') r+=n;
+    else if(op==='-'||op==='−') r-=n;
+    else if(op==='×'||op==='*') r*=n;
+    else if(op==='÷'||op==='/'){if(!n||r%n!==0) return null; r=r/n;}
+  }
+  return r;
 }
 
-function updateXpBar() {
-  const need = xpNeeded();
-  const pct = Math.min(100, (xp / need) * 100);
-  $xpBar.style.width = pct + '%';
-  $xpLabel.textContent = xp + ' / ' + need + ' xp';
-}
+// ── Board-first generation: build board, find valid exprs, pick target ────────
+function genLevel(){
+  if(level>=5)       mode='chain';
+  else if(level>=3)  mode='ops';
+  else               mode='sum';
 
-function genLevel() {
-  // Determine mode: sum for early levels, ops for every 3rd, chain for level 6+
-  if (level >= 6 && level % 3 === 0) {
-    mode = 'chain';
-  } else if (level % 3 === 0) {
-    mode = 'ops';
+  selected=[];
+  timerSecs=timerForLevel();
+  timeLeft=timerSecs;
+
+  const maxNum=Math.min(3+level*2,20);
+  const opPool=['+','−','×'];
+  if(level>=4) opPool.push('÷');
+
+  // Build a fresh 4×4 board
+  // Sum mode: all num tiles. Ops/chain: alternating num op num op...
+  let boardTiles=[];
+  if(mode==='sum'){
+    for(let i=0;i<BOARD_SIZE;i++){
+      boardTiles.push({id:i,type:'num',val:rng(2,maxNum),col:COLORS[i%5]});
+    }
+    $modePill.textContent='+ sum mode';
   } else {
-    mode = 'sum';
+    // 8 num tiles + 8 op tiles in alternating positions
+    for(let i=0;i<BOARD_SIZE;i++){
+      if(i%2===0) boardTiles.push({id:i,type:'num',val:rng(2,maxNum),col:COLORS[Math.floor(i/2)%5]});
+      else         boardTiles.push({id:i,type:'op', val:opPool[rng(0,opPool.length-1)],col:'oc'});
+    }
+    $modePill.textContent=mode==='ops'?'± ops mode':'chain mode!';
   }
 
-  selected = [];
-  timerSecs = timerForLevel();
-  timeLeft = timerSecs;
-  tiles = [];
+  // Find all valid expressions from this board and pick one with result >= 10
+  const validExprs=findValidExprs(boardTiles,mode,opPool);
 
-  const maxNum = Math.min(3 + level * 2, 25);
-  const ops = ['+', '−', '×'];
-  if (level >= 3) ops.push('÷');
-
-  if (mode === 'sum') {
-    // Place random numbers; pick a random subset as the hidden solution
-    const nums = Array.from({ length: 25 }, () => rng(1, maxNum));
-    const solN = rng(2, Math.min(4, 2 + Math.floor(level / 2)));
-    const solIdx = [];
-    while (solIdx.length < solN) {
-      const i = rng(0, 24);
-      if (!solIdx.includes(i)) solIdx.push(i);
-    }
-    target = solIdx.reduce((s, i) => s + nums[i], 0);
-    tiles = nums.map((n, i) => ({ val: n, type: 'num', col: TILE_COLORS[i % 5], id: i }));
-    $modeBadge.textContent = '+ sum mode';
-    $modeBadge.style.background = '#EEEDFE';
-    $modeBadge.style.color = '#534AB7';
-
-  } else if (mode === 'ops') {
-    // Alternating num / op tiles; target = first two nums with first op
-    const rows = [];
-    for (let i = 0; i < 25; i++) {
-      if (i % 2 === 0) {
-        rows.push({ val: rng(1, maxNum), type: 'num', col: TILE_COLORS[Math.floor(i / 2) % 5], id: i });
-      } else {
-        rows.push({ val: ops[rng(0, ops.length - 1)], type: 'op', col: 'op', id: i });
-      }
-    }
-    const a = rows[0].val, op = rows[1].val, b = rows[2].val;
-    if (op === '+') target = a + b;
-    else if (op === '−') target = a - b;
-    else if (op === '×') target = a * b;
-    else target = b !== 0 ? Math.round(a / b) : a + b;
-    tiles = rows;
-    $modeBadge.textContent = '± ops mode';
-    $modeBadge.style.background = '#E6F1FB';
-    $modeBadge.style.color = '#185FA5';
-
-  } else {
-    // Chain mode: alternating tiles; target = a op1 b op2 c (left to right)
-    const rows = [];
-    for (let i = 0; i < 25; i++) {
-      if (i % 2 === 0) {
-        rows.push({ val: rng(1, maxNum), type: 'num', col: TILE_COLORS[Math.floor(i / 2) % 5], id: i });
-      } else {
-        rows.push({ val: ops[rng(0, ops.length - 1)], type: 'op', col: 'op', id: i });
-      }
-    }
-    const a = rows[0].val, op1 = rows[1].val, b = rows[2].val, op2 = rows[3].val, c = rows[4].val;
-    let t = a;
-    if (op1 === '+') t = a + b; else if (op1 === '−') t = a - b; else if (op1 === '×') t = a * b; else t = b ? Math.round(a / b) : a;
-    if (op2 === '+') t = t + c; else if (op2 === '−') t = t - c; else if (op2 === '×') t = t * c; else t = c ? Math.round(t / c) : t;
-    target = t;
-    tiles = rows;
-    $modeBadge.textContent = 'chain mode!';
-    $modeBadge.style.background = '#FBEAF0';
-    $modeBadge.style.color = '#993556';
+  if(!validExprs.length){
+    // Shouldn't happen, but regenerate if somehow none found
+    genLevel(); return;
   }
 
-  $target.textContent = target;
-  $lvlNum.textContent = level;
-  updateXpBar();
+  // Prefer expressions with result >= 10; shuffle and pick
+  const good=validExprs.filter(e=>e.result>=10);
+  const pool=good.length?good:validExprs;
+  // Shuffle
+  for(let i=pool.length-1;i>0;i--){const j=rng(0,i);[pool[i],pool[j]]=[pool[j],pool[i]];}
+  const chosen=pool[0];
+  target=chosen.result;
+  solution=chosen.seq; // store for debug / hint purposes
+
+  tiles=boardTiles;
+  $targetNum.textContent=target;
+  $lvlNum.textContent=level;
+  updateXp();
   renderGrid();
   resetTimer();
-  gameActive = true;
+  gameActive=true;
 }
 
-function renderGrid() {
-  $grid.innerHTML = '';
-  tiles.forEach(t => {
-    const el = document.createElement('div');
-    el.className = 'tile new-in ' + (t.col === 'op' ? 'op' : t.col);
-    if (selected.find(s => s.id === t.id)) el.classList.add('selected');
-    el.textContent = t.val;
-    el.dataset.id = t.id;
-    el.addEventListener('click', () => toggleTile(t, el));
-    $grid.appendChild(el);
-  });
-  updateSelRow();
-}
+// ── Find valid expressions reachable from the current board ──────────────────
+// Returns [{seq:[tile,...], result:number}, ...]
+function findValidExprs(boardTiles,mode,opPool){
+  const results=[];
+  const numTiles=boardTiles.filter(t=>t.type==='num');
+  const opTiles=boardTiles.filter(t=>t.type==='op');
 
-function toggleTile(t, el) {
-  const idx = selected.findIndex(s => s.id === t.id);
-  if (idx >= 0) {
-    selected.splice(idx, 1);
-    el.classList.remove('selected');
-  } else {
-    // Limit selections by mode
-    if (mode === 'sum' && selected.filter(s => s.type === 'num').length >= 6) return;
-    if (mode === 'ops') {
-      const nc = selected.filter(s => s.type === 'num').length;
-      const oc = selected.filter(s => s.type === 'op').length;
-      if (t.type === 'num' && nc >= 2) return;
-      if (t.type === 'op' && oc >= 1) return;
+  if(mode==='sum'){
+    // Try all subsets of 2-5 num tiles
+    const n=numTiles.length;
+    for(let mask=1;mask<(1<<n);mask++){
+      const bits=[];
+      for(let b=0;b<n;b++) if(mask&(1<<b)) bits.push(b);
+      if(bits.length<2||bits.length>5) continue;
+      const seq=bits.map(b=>numTiles[b]);
+      const r=seq.reduce((a,t)=>a+t.val,0);
+      if(r>=10) results.push({seq,result:r});
+      if(results.length>=30) break; // cap search
     }
-    selected.push(t);
-    el.classList.add('selected');
-  }
-  updateSelRow();
-}
-
-// Evaluate selected tiles left-to-right by tile ID order
-function evalChain(sel) {
-  const ordered = [...sel].sort((a, b) => a.id - b.id);
-  const nums = ordered.filter(s => s.type === 'num').map(s => s.val);
-  const ops  = ordered.filter(s => s.type === 'op').map(s => s.val);
-  if (nums.length === 0) return null;
-  if (mode === 'sum') return nums.reduce((a, v) => a + v, 0);
-  if (nums.length < 2 && mode !== 'sum') return nums.length === 1 ? nums[0] : null;
-  let result = nums[0];
-  for (let i = 0; i < ops.length && i < nums.length - 1; i++) {
-    const op = ops[i], n = nums[i + 1];
-    if (op === '+')      result += n;
-    else if (op === '−') result -= n;
-    else if (op === '×') result *= n;
-    else if (op === '÷') { result = n ? Math.round(result / n) : null; }
-    if (result === null) return null;
-  }
-  return result;
-}
-
-// Chip background/text colours per tile colour class
-const CHIP_BG  = ['#CECBF6','#9FE1CB','#FAC775','#F4C0D1','#C0DD97'];
-const CHIP_COL = ['#26215C','#04342C','#412402','#4B1528','#173404'];
-
-function updateSelRow() {
-  if (selected.length === 0) {
-    $selChips.innerHTML = '<span style="font-size:12px;color:#B4B2A9">tap tiles to select</span>';
-    $selVal.textContent = '—';
-    $selVal.className = '';
-    $btnSubmit.disabled = true;
-    return;
-  }
-  const ordered = [...selected].sort((a, b) => a.id - b.id);
-  $selChips.innerHTML = ordered.map(s => {
-    const idx = s.col === 'op' ? -1 : parseInt(s.col.replace('num', ''));
-    const bg  = idx >= 0 ? CHIP_BG[idx]  : '#B5D4F4';
-    const col = idx >= 0 ? CHIP_COL[idx] : '#042C53';
-    return `<span class="chip" style="background:${bg};color:${col}">${s.val}</span>`;
-  }).join('');
-  const res = evalChain(selected);
-  if (res === null) {
-    $selVal.textContent = '?';
-    $selVal.className = '';
-    $btnSubmit.disabled = true;
   } else {
-    $selVal.textContent = '= ' + res;
-    $selVal.className = res === target ? 'match' : (res > target ? 'over' : '');
-    $btnSubmit.disabled = false;
-  }
-}
+    // For ops/chain: try expressions of form N [op N]+ with 1-3 operators
+    // using tiles from the board (each tile used at most once)
+    const maxOps=mode==='chain'?3:1;
 
-function submitAnswer() {
-  const res = evalChain(selected);
-  if (res === target) {
-    streak++;
-    const pts = ptsForSolve();
-    score += pts;
-    xp += pts;
-    if (score > bestScore) bestScore = score;
-    $scoreVal.textContent = score;
-    $bestVal.textContent  = bestScore;
-
-    const msg = streak >= 3 ? 'COMBO x' + streak + '! +' + pts
-              : streak === 2 ? 'Double! +' + pts
-              : 'Correct! +' + pts;
-    const toastColor = streak >= 3 ? '#D85A30' : streak === 2 ? '#BA7517' : '#0F6E56';
-    showToast(msg, toastColor);
-
-    // Animate clearing tiles
-    const selIds = selected.map(s => s.id);
-    selIds.forEach(id => {
-      const el = $grid.querySelector('[data-id="' + id + '"]');
-      if (el) el.classList.add('clearing');
-    });
-
-    setTimeout(() => {
-      tiles = tiles.filter(t => !selIds.includes(t.id));
-      const maxNum = Math.min(3 + level * 2, 25);
-      const ops = ['+', '−', '×'];
-      if (level >= 3) ops.push('÷');
-
-      // Refill board to 25 tiles
-      while (tiles.length < 25) {
-        const isOdd = tiles.length % 2 === 1 && mode !== 'sum';
-        if (isOdd) {
-          tiles.push({ val: ops[rng(0, ops.length - 1)], type: 'op', col: 'op', id: Date.now() + Math.random() });
-        } else {
-          tiles.push({ val: rng(1, maxNum), type: 'num', col: TILE_COLORS[tiles.length % 5], id: Date.now() + Math.random() });
+    function search(seq,usedIds){
+      const last=seq[seq.length-1];
+      // If seq ends on a num, it's a valid expression
+      if(last.type==='num'&&seq.length>=3){
+        const r=evalSeq(seq);
+        if(r!==null) results.push({seq:[...seq],result:r});
+      }
+      if(results.length>=40) return;
+      const opCount=seq.filter(t=>t.type==='op').length;
+      if(last.type==='num'&&opCount<maxOps){
+        // add an op then a num
+        for(const op of opTiles){
+          if(usedIds.has(op.id)) continue;
+          for(const num of numTiles){
+            if(usedIds.has(num.id)) continue;
+            usedIds.add(op.id);usedIds.add(num.id);
+            seq.push(op,num);
+            search(seq,usedIds);
+            seq.pop();seq.pop();
+            usedIds.delete(op.id);usedIds.delete(num.id);
+            if(results.length>=40) return;
+          }
         }
       }
-      selected = [];
+    }
 
-      // Level up if enough XP
-      if (xp >= xpNeeded()) {
-        xp = 0;
-        level++;
-        genLevel();
-      } else {
-        updateXpBar();
-        renderGrid();
-        updateSelRow();
-      }
-    }, 400);
+    // Start with each num tile as first element
+    for(const startNum of numTiles){
+      if(results.length>=40) break;
+      search([startNum],new Set([startNum.id]));
+    }
+  }
+  return results;
+}
 
+// ── Evaluate what the player has currently selected ───────────────────────────
+function evalSelected(){
+  if(!selected.length) return null;
+  const sorted=[...selected].sort((a,b)=>a.id-b.id);
+  if(mode==='sum'){
+    const nums=sorted.filter(s=>s.type==='num');
+    return nums.length>=2?nums.reduce((a,s)=>a+s.val,0):null;
+  }
+  return evalSeq(sorted);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderGrid(){
+  $grid.innerHTML='';
+  tiles.forEach(t=>{
+    const el=document.createElement('div');
+    el.className='tile drop-in '+t.col;
+    if(selected.find(s=>s.id===t.id)) el.classList.add('sel');
+    el.textContent=t.val;
+    el.dataset.id=t.id;
+    el.addEventListener('click',()=>onTileClick(t,el));
+    $grid.appendChild(el);
+  });
+  updateEqBar();
+}
+
+function onTileClick(t,el){
+  resumeAC();
+  const idx=selected.findIndex(s=>s.id===t.id);
+  if(idx>=0){
+    selected.splice(idx,1);
+    el.classList.remove('sel');
+    playDeselect();
   } else {
-    // Wrong answer
-    streak = 0;
-    showToast('Not quite! Try again', '#993C1D');
-    $grid.querySelectorAll('.tile.selected').forEach(el => {
-      el.classList.add('wrong');
-      setTimeout(() => el.classList.remove('wrong'), 400);
-    });
-    selected = [];
-    $grid.querySelectorAll('.tile').forEach(el => el.classList.remove('selected'));
-    updateSelRow();
+    if(mode==='sum'){
+      if(t.type==='op') return;
+      if(selected.filter(s=>s.type==='num').length>=5) return;
+    } else {
+      // must alternate: last in selection and new tile can't be same type
+      const selSorted=[...selected,t].sort((a,b)=>a.id-b.id);
+      // Check the full sorted sequence would be valid so far
+      for(let i=0;i<selSorted.length;i++){
+        const expected=i%2===0?'num':'op';
+        if(selSorted[i].type!==expected){
+          el.classList.add('wrong-anim');
+          setTimeout(()=>el.classList.remove('wrong-anim'),400);
+          return;
+        }
+      }
+    }
+    selected.push(t);
+    el.classList.add('sel');
+    el.classList.remove('bounce');void el.offsetWidth;el.classList.add('bounce');
+    playTileSelect(COLORS.indexOf(t.col));
+  }
+  updateEqBar();
+}
+
+function updateEqBar(){
+  if(!selected.length){
+    $eqChips.innerHTML='<span class="placeholder">tap tiles to build an equation</span>';
+    $eqResult.textContent='—';$eqResult.className='';$btnGo.disabled=true;return;
+  }
+  const sorted=[...selected].sort((a,b)=>a.id-b.id);
+  $eqChips.innerHTML=sorted.map(s=>{
+    const st=CHIP_STYLES[s.col]||{bg:'#555',color:'#fff'};
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;border-radius:8px;font-size:15px;font-weight:900;background:${st.bg};color:${st.color}">${s.val}</span>`;
+  }).join('');
+  const res=evalSelected();
+  if(res===null){$eqResult.textContent='?';$eqResult.className='';$btnGo.disabled=true;}
+  else{
+    $eqResult.textContent='= '+res;
+    $eqResult.className=res===target?'match':res>target?'over':'under';
+    $btnGo.disabled=false;
   }
 }
 
-function resetTimer() {
-  clearInterval(timerInt);
-  $timerBar.style.width = '100%';
-  $timerBar.style.background = '#3B6D11';
-  timerInt = setInterval(() => {
-    if (!gameActive) return;
-    timeLeft -= 0.1;
-    const pct = (timeLeft / timerSecs) * 100;
-    $timerBar.style.width = pct + '%';
-    $timerLabel.textContent = Math.ceil(timeLeft) + 's';
-    if (pct < 35) $timerBar.style.background = '#BA7517';
-    if (pct < 15) $timerBar.style.background = '#A32D2D';
-    if (timeLeft <= 0) {
-      clearInterval(timerInt);
-      gameActive = false;
-      gameOver();
-    }
-  }, 100);
+// ── Submit answer ─────────────────────────────────────────────────────────────
+function onSubmit(){
+  resumeAC();
+  const res=evalSelected();
+  if(res===target){
+    playCorrect();
+    const opCount=selected.filter(s=>s.type==='op').length;
+    const pts=ptsFor(opCount);
+    score+=pts;xp+=pts;
+    if(score>bestScore) bestScore=score;
+    $scoreVal.textContent=score;$bestVal.textContent=bestScore;
+
+    // Floating +pts
+    const rect=$app.getBoundingClientRect();
+    const pop=document.createElement('div');
+    pop.className='score-pop';pop.textContent='+'+pts+'!';
+    pop.style.left=(rect.left+rect.width/2-30)+'px';
+    pop.style.top=(rect.top+200)+'px';
+    document.body.appendChild(pop);setTimeout(()=>pop.remove(),1200);
+
+    // Particle burst at each selected tile
+    selected.forEach(s=>{
+      const el=$grid.querySelector('[data-id="'+s.id+'"]');
+      if(el){const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,BURST_COLORS,14);el.classList.add('pop-out');}
+    });
+
+    const removedIds=new Set(selected.map(s=>s.id));
+    selected=[];
+
+    setTimeout(()=>{
+      // Remove used tiles and refill
+      tiles=tiles.filter(t=>!removedIds.has(t.id));
+      const maxNum=Math.min(3+level*2,20);
+      const opPool=['+','−','×'];if(level>=4) opPool.push('÷');
+
+      while(tiles.length<BOARD_SIZE){
+        const newId=Date.now()+Math.random();
+        if(mode==='sum'){
+          tiles.push({id:newId,type:'num',val:rng(2,maxNum),col:COLORS[tiles.length%5]});
+        } else {
+          // maintain alternating pattern by looking at current tile count parity
+          const numCount=tiles.filter(t=>t.type==='num').length;
+          const opCount2=tiles.filter(t=>t.type==='op').length;
+          if(numCount<=opCount2){
+            tiles.push({id:newId,type:'num',val:rng(2,maxNum),col:COLORS[numCount%5]});
+          } else {
+            tiles.push({id:newId,type:'op',val:opPool[rng(0,opPool.length-1)],col:'oc'});
+          }
+        }
+      }
+
+      // Verify the new board still has a solution for the SAME target
+      // If not, pick a new valid target from the current board
+      const exprs=findValidExprs(tiles,mode,opPool);
+      if(exprs.length){
+        const matching=exprs.filter(e=>e.result===target);
+        if(!matching.length){
+          // Existing target no longer solvable — pick a new one
+          const good=exprs.filter(e=>e.result>=10);
+          const pick=(good.length?good:exprs)[rng(0,Math.min((good.length||exprs.length)-1,5))];
+          target=pick.result;
+          solution=pick.seq;
+          $targetNum.textContent=target;
+        }
+      }
+
+      updateXp();
+      if(xp>=xpNeeded()){
+        xp=0;level++;
+        playLevelUp();
+        burst(window.innerWidth/2,window.innerHeight/2,BURST_COLORS,50);
+        genLevel();
+      } else {
+        renderGrid();updateEqBar();
+      }
+    },380);
+
+  } else {
+    playWrong();
+    $app.classList.remove('shaking');void $app.offsetWidth;$app.classList.add('shaking');
+    setTimeout(()=>$app.classList.remove('shaking'),400);
+    $grid.querySelectorAll('.tile.sel').forEach(el=>{el.classList.add('wrong-anim');el.classList.remove('sel');setTimeout(()=>el.classList.remove('wrong-anim'),400);});
+    selected=[];updateEqBar();
+  }
 }
 
-function gameOver() {
-  clearInterval(timerInt);
-  gameActive = false;
-  if (score > bestScore) bestScore = score;
-  $overLvl.textContent   = level;
-  $overScore.textContent = score;
-  $overBest.textContent  = bestScore;
-  $gameScreen.style.display = 'none';
-  $overScreen.style.display = 'block';
+function updateXp(){
+  const need=xpNeeded();
+  $xpFill.style.width=Math.min(100,(xp/need)*100)+'%';
+  $xpTxt.textContent=xp+' / '+need+' to level up';
 }
 
-document.getElementById('btn-restart').addEventListener('click', () => {
-  level = 1; score = 0; xp = 0; streak = 0;
-  $scoreVal.textContent = 0;
-  $bestVal.textContent  = bestScore;
-  $overScreen.style.display  = 'none';
-  $gameScreen.style.display  = 'block';
-  genLevel();
+function resetTimer(){
+  clearInterval(timerInt);
+  $timerFill.style.width='100%';$timerFill.style.background='#22c55e';
+  timerInt=setInterval(()=>{
+    if(!gameActive) return;
+    timeLeft-=.1;
+    const pct=(timeLeft/timerSecs)*100;
+    $timerFill.style.width=pct+'%';
+    $timerTxt.textContent=Math.ceil(timeLeft)+'s';
+    if(pct<40) $timerFill.style.background='#f59e0b';
+    if(pct<15) $timerFill.style.background='#ef4444';
+    if(timeLeft<=0){clearInterval(timerInt);gameActive=false;gameOver();}
+  },100);
+}
+
+function gameOver(){
+  playGameOver();
+  if(score>bestScore) bestScore=score;
+  document.getElementById('over-lvl').textContent=level;
+  document.getElementById('over-score').textContent=score;
+  document.getElementById('over-best').textContent=bestScore;
+  $over.classList.add('show');
+}
+
+document.getElementById('btn-restart').addEventListener('click',()=>{
+  resumeAC();level=1;score=0;xp=0;
+  $scoreVal.textContent=0;$bestVal.textContent=bestScore;
+  $over.classList.remove('show');genLevel();
+});
+$btnGo.addEventListener('click',onSubmit);
+$btnClear.addEventListener('click',()=>{
+  resumeAC();selected=[];
+  $grid.querySelectorAll('.tile').forEach(el=>el.classList.remove('sel'));
+  updateEqBar();playDeselect();
 });
 
-$btnSubmit.addEventListener('click', submitAnswer);
-$btnClear.addEventListener('click', () => {
-  selected = [];
-  $grid.querySelectorAll('.tile').forEach(el => el.classList.remove('selected'));
-  updateSelRow();
-});
-
-// Kick off the game
 genLevel();
 </script>
 </body>
