@@ -483,14 +483,15 @@ function findValidExprs(boardTiles,mode,opPool){
 }
 
 // ── Evaluate what the player has currently selected ───────────────────────────
+// selected is kept in tap-order for ops/chain; sum mode order doesn't matter
 function evalSelected(){
   if(!selected.length) return null;
-  const sorted=[...selected].sort((a,b)=>a.id-b.id);
   if(mode==='sum'){
-    const nums=sorted.filter(s=>s.type==='num');
-    return nums.length>=2?nums.reduce((a,s)=>a+s.val,0):null;
+    const nums=selected.filter(s=>s.type==='num');
+    return nums.length>=2 ? nums.reduce((a,s)=>a+s.val,0) : null;
   }
-  return evalSeq(sorted);
+  // ops/chain: selected is already in tap order = num op num op ...
+  return evalSeq(selected);
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -513,27 +514,45 @@ function onTileClick(t,el){
   resetIdleHint();
   const idx=selected.findIndex(s=>s.id===t.id);
   if(idx>=0){
-    selected.splice(idx,1);
-    el.classList.remove('sel');
-    playDeselect();
+    // Deselect: only allow removing the LAST tile (keeps sequence valid)
+    if(idx===selected.length-1){
+      selected.pop();
+      el.classList.remove('sel');
+      playDeselect();
+    } else {
+      // Tapping a non-last selected tile in ops/chain is ambiguous — ignore with a flash
+      el.classList.add('wrong-anim');
+      setTimeout(()=>el.classList.remove('wrong-anim'),400);
+    }
   } else {
     if(mode==='sum'){
+      // Sum mode: any number tile, up to 5, order irrelevant
       if(t.type==='op') return;
       if(selected.filter(s=>s.type==='num').length>=5) return;
     } else {
-      const selSorted=[...selected,t].sort((a,b)=>a.id-b.id);
-      for(let i=0;i<selSorted.length;i++){
-        if(selSorted[i].type!==(i%2===0?'num':'op')){
+      // Ops/chain mode: must strictly alternate num→op→num→op…
+      // First tile must be a number
+      if(selected.length===0 && t.type!=='num'){
+        el.classList.add('wrong-anim');
+        setTimeout(()=>el.classList.remove('wrong-anim'),400);
+        return;
+      }
+      if(selected.length>0){
+        const lastType=selected[selected.length-1].type;
+        const expectedType=lastType==='num'?'op':'num';
+        if(t.type!==expectedType){
           el.classList.add('wrong-anim');
           setTimeout(()=>el.classList.remove('wrong-anim'),400);
           return;
         }
       }
+      // Cap: num op num op num = 5 tiles (2 ops) for ops mode, up to 7 tiles (3 ops) for chain
+      const maxTiles=mode==='chain'?7:5;
+      if(selected.length>=maxTiles) return;
     }
     selected.push(t);
     el.classList.add('sel');
     el.classList.remove('bounce'); void el.offsetWidth; el.classList.add('bounce');
-    // Play a note pitched to the tile's value
     playTileSelect(t.type==='num'?t.val:0);
   }
   updateEqBar();
@@ -541,7 +560,8 @@ function onTileClick(t,el){
 
 function updateEqBar(){
   if(!selected.length){
-    $eqChips.innerHTML='<span class="placeholder">tap tiles to build an equation</span>';
+    const hint=mode==='sum'?'tap numbers that add up to the target':'start with a number, then op, then number…';
+    $eqChips.innerHTML=`<span class="placeholder">${hint}</span>`;
     $eqResult.textContent='—'; $eqResult.className=''; $btnGo.disabled=true; return;
   }
   const sorted=[...selected].sort((a,b)=>a.id-b.id);
