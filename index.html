@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Mash</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F1EFE8;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+#wrap{width:360px;padding:10px;background:#FBEAF0;border-radius:20px;min-height:600px;position:relative}
+
+/* top bar */
+#topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+#lvl-badge{background:#AFA9EC;color:#26215C;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+#score-box{background:#9FE1CB;color:#04342C;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+#best-box{background:#FAC775;color:#412402;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+
+/* target card */
+#target-card{background:#534AB7;border-radius:14px;padding:10px 14px;margin-bottom:8px;text-align:center}
+#target-label{font-size:11px;color:#CECBF6;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
+#target-num{font-size:44px;font-weight:600;color:#fff;line-height:1}
+#mode-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#EEEDFE;color:#534AB7;margin-top:4px;display:inline-block}
+
+/* xp bar */
+#xp-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#xp-bar-wrap{flex:1;height:10px;background:#F4C0D1;border-radius:6px;overflow:hidden}
+#xp-bar{height:100%;background:#D4537E;border-radius:6px;transition:width .4s ease}
+#xp-label{font-size:11px;color:#72243E;font-weight:600;white-space:nowrap}
+
+/* timer */
+#timer-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#timer-wrap{flex:1;height:8px;background:#C0DD97;border-radius:4px;overflow:hidden}
+#timer-bar{height:100%;background:#3B6D11;border-radius:4px;transition:width .1s linear,background .3s}
+#timer-label{font-size:12px;font-weight:600;color:#27500A;min-width:28px;text-align:right}
+
+/* selection row */
+#sel-row{min-height:44px;background:#fff;border-radius:12px;border:2px solid #F4C0D1;display:flex;align-items:center;gap:6px;padding:6px 10px;margin-bottom:8px;flex-wrap:wrap}
+#sel-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+#sel-val{font-size:15px;font-weight:600;color:#888780;min-width:44px;text-align:right;white-space:nowrap}
+#sel-val.match{color:#0F6E56}
+#sel-val.over{color:#A32D2D}
+
+/* grid */
+#grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:8px}
+.tile{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;cursor:pointer;transition:transform .1s,opacity .2s;user-select:none;border:2.5px solid transparent}
+.tile:active{transform:scale(.9)}
+.tile.num0{background:#EEEDFE;color:#26215C;border-color:#AFA9EC}
+.tile.num1{background:#E1F5EE;color:#04342C;border-color:#5DCAA5}
+.tile.num2{background:#FAEEDA;color:#412402;border-color:#EF9F27}
+.tile.num3{background:#FBEAF0;color:#4B1528;border-color:#ED93B1}
+.tile.num4{background:#EAF3DE;color:#173404;border-color:#97C459}
+.tile.op{background:#E6F1FB;color:#042C53;border-color:#85B7EB;font-size:20px}
+.tile.selected{transform:scale(1.08);border-width:2.5px;box-shadow:0 0 0 3px rgba(83,74,183,.25)}
+.tile.num0.selected{border-color:#534AB7;background:#CECBF6}
+.tile.num1.selected{border-color:#1D9E75;background:#9FE1CB}
+.tile.num2.selected{border-color:#BA7517;background:#FAC775}
+.tile.num3.selected{border-color:#D4537E;background:#F4C0D1}
+.tile.num4.selected{border-color:#639922;background:#C0DD97}
+.tile.op.selected{border-color:#185FA5;background:#B5D4F4}
+.tile.clearing{animation:pop .35s ease forwards}
+.tile.wrong{animation:shake .35s ease}
+.tile.new-in{animation:dropin .3s ease}
+@keyframes pop{0%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.5}100%{transform:scale(0);opacity:0}}
+@keyframes shake{0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}100%{transform:translateX(0)}}
+@keyframes dropin{0%{transform:translateY(-14px);opacity:0}100%{transform:translateY(0);opacity:1}}
+
+/* buttons */
+#btns{display:flex;gap:6px}
+#btns button{flex:1;padding:11px;border-radius:12px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:transform .1s}
+#btns button:active{transform:scale(.96)}
+#btn-clear{background:#F4C0D1;color:#4B1528}
+#btn-submit{background:#534AB7;color:#fff}
+#btn-submit:disabled{background:#D3D1C7;color:#888780;cursor:default}
+
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 5px;border-radius:6px;font-size:13px;font-weight:600}
+
+/* toast */
+#toast{position:absolute;bottom:0;left:50%;transform:translateX(-50%) translateY(60px);background:#534AB7;color:#fff;padding:7px 18px;border-radius:20px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;z-index:99}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-16px)}
+
+/* game over screen */
+#screen-game{display:block}
+#screen-over{display:none;text-align:center;padding:2rem 1rem}
+#screen-over h2{font-size:32px;font-weight:600;color:#534AB7;margin-bottom:4px}
+#screen-over .sub{font-size:14px;color:#993556;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:2px solid #CECBF6}
+.stat-card .lbl{font-size:12px;color:#888780;margin-bottom:4px}
+.stat-card .val{font-size:28px;font-weight:600;color:#534AB7}
+#btn-restart{background:#534AB7;color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin-top:4px}
+#btn-restart:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="screen-game">
+    <div id="topbar">
+      <div id="lvl-badge">Level <span id="lvl-num">1</span></div>
+      <div id="score-box">Score: <span id="score-val">0</span></div>
+      <div id="best-box">Best: <span id="best-val">0</span></div>
+    </div>
+
+    <div id="target-card">
+      <div id="target-label">make this number</div>
+      <div id="target-num">—</div>
+      <div id="mode-badge">+ sum mode</div>
+    </div>
+
+    <div id="xp-row">
+      <div id="xp-bar-wrap"><div id="xp-bar" style="width:0%"></div></div>
+      <div id="xp-label">0 / 300 xp</div>
+    </div>
+
+    <div id="timer-row">
+      <div id="timer-wrap"><div id="timer-bar"></div></div>
+      <div id="timer-label">30s</div>
+    </div>
+
+    <div id="sel-row">
+      <div id="sel-chips"><span style="font-size:12px;color:#B4B2A9">tap tiles to select</span></div>
+      <div id="sel-val">—</div>
+    </div>
+
+    <div id="grid"></div>
+
+    <div id="btns">
+      <button id="btn-clear">Clear</button>
+      <button id="btn-submit" disabled>Submit!</button>
+    </div>
+  </div>
+
+  <div id="screen-over">
+    <div style="font-size:48px;margin-bottom:8px">&#9733;</div>
+    <h2>Game over!</h2>
+    <div class="sub">You reached level <span id="over-lvl">1</span></div>
+    <div class="stat-card"><div class="lbl">Your score</div><div class="val" id="over-score">0</div></div>
+    <div class="stat-card"><div class="lbl">Best score ever</div><div class="val" id="over-best">0</div></div>
+    <button id="btn-restart">Play again</button>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+const TILE_COLORS = ['num0','num1','num2','num3','num4'];
+let level=1, score=0, xp=0, bestScore=0, streak=0;
+let target=0, mode='sum', tiles=[], selected=[], timerSecs=30, timeLeft=30;
+let timerInt=null, toastT=null, gameActive=false;
+
+const $grid        = document.getElementById('grid');
+const $target      = document.getElementById('target-num');
+const $selChips    = document.getElementById('sel-chips');
+const $selVal      = document.getElementById('sel-val');
+const $btnSubmit   = document.getElementById('btn-submit');
+const $btnClear    = document.getElementById('btn-clear');
+const $scoreVal    = document.getElementById('score-val');
+const $bestVal     = document.getElementById('best-val');
+const $lvlNum      = document.getElementById('lvl-num');
+const $xpBar       = document.getElementById('xp-bar');
+const $xpLabel     = document.getElementById('xp-label');
+const $timerBar    = document.getElementById('timer-bar');
+const $timerLabel  = document.getElementById('timer-label');
+const $modeBadge   = document.getElementById('mode-badge');
+const $toast       = document.getElementById('toast');
+const $gameScreen  = document.getElementById('screen-game');
+const $overScreen  = document.getElementById('screen-over');
+const $overLvl     = document.getElementById('over-lvl');
+const $overScore   = document.getElementById('over-score');
+const $overBest    = document.getElementById('over-best');
+
+function rng(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function xpNeeded() { return 200 + level * 100; }
+function timerForLevel() { return Math.max(15, 30 - Math.floor(level / 3)); }
+function ptsForSolve() { return Math.floor((100 + level * 25) * (streak >= 3 ? 2 : streak >= 2 ? 1.5 : 1)); }
+
+function showToast(msg, bg) {
+  $toast.textContent = msg;
+  $toast.style.background = bg || '#534AB7';
+  $toast.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => $toast.classList.remove('show'), 1500);
+}
+
+function updateXpBar() {
+  const need = xpNeeded();
+  const pct = Math.min(100, (xp / need) * 100);
+  $xpBar.style.width = pct + '%';
+  $xpLabel.textContent = xp + ' / ' + need + ' xp';
+}
+
+function genLevel() {
+  // Determine mode: sum for early levels, ops for every 3rd, chain for level 6+
+  if (level >= 6 && level % 3 === 0) {
+    mode = 'chain';
+  } else if (level % 3 === 0) {
+    mode = 'ops';
+  } else {
+    mode = 'sum';
+  }
+
+  selected = [];
+  timerSecs = timerForLevel();
+  timeLeft = timerSecs;
+  tiles = [];
+
+  const maxNum = Math.min(3 + level * 2, 25);
+  const ops = ['+', '−', '×'];
+  if (level >= 3) ops.push('÷');
+
+  if (mode === 'sum') {
+    // Place random numbers; pick a random subset as the hidden solution
+    const nums = Array.from({ length: 25 }, () => rng(1, maxNum));
+    const solN = rng(2, Math.min(4, 2 + Math.floor(level / 2)));
+    const solIdx = [];
+    while (solIdx.length < solN) {
+      const i = rng(0, 24);
+      if (!solIdx.includes(i)) solIdx.push(i);
+    }
+    target = solIdx.reduce((s, i) => s + nums[i], 0);
+    tiles = nums.map((n, i) => ({ val: n, type: 'num', col: TILE_COLORS[i % 5], id: i }));
+    $modeBadge.textContent = '+ sum mode';
+    $modeBadge.style.background = '#EEEDFE';
+    $modeBadge.style.color = '#534AB7';
+
+  } else if (mode === 'ops') {
+    // Alternating num / op tiles; target = first two nums with first op
+    const rows = [];
+    for (let i = 0; i < 25; i++) {
+      if (i % 2 === 0) {
+        rows.push({ val: rng(1, maxNum), type: 'num', col: TILE_COLORS[Math.floor(i / 2) % 5], id: i });
+      } else {
+        rows.push({ val: ops[rng(0, ops.length - 1)], type: 'op', col: 'op', id: i });
+      }
+    }
+    const a = rows[0].val, op = rows[1].val, b = rows[2].val;
+    if (op === '+') target = a + b;
+    else if (op === '−') target = a - b;
+    else if (op === '×') target = a * b;
+    else target = b !== 0 ? Math.round(a / b) : a + b;
+    tiles = rows;
+    $modeBadge.textContent = '± ops mode';
+    $modeBadge.style.background = '#E6F1FB';
+    $modeBadge.style.color = '#185FA5';
+
+  } else {
+    // Chain mode: alternating tiles; target = a op1 b op2 c (left to right)
+    const rows = [];
+    for (let i = 0; i < 25; i++) {
+      if (i % 2 === 0) {
+        rows.push({ val: rng(1, maxNum), type: 'num', col: TILE_COLORS[Math.floor(i / 2) % 5], id: i });
+      } else {
+        rows.push({ val: ops[rng(0, ops.length - 1)], type: 'op', col: 'op', id: i });
+      }
+    }
+    const a = rows[0].val, op1 = rows[1].val, b = rows[2].val, op2 = rows[3].val, c = rows[4].val;
+    let t = a;
+    if (op1 === '+') t = a + b; else if (op1 === '−') t = a - b; else if (op1 === '×') t = a * b; else t = b ? Math.round(a / b) : a;
+    if (op2 === '+') t = t + c; else if (op2 === '−') t = t - c; else if (op2 === '×') t = t * c; else t = c ? Math.round(t / c) : t;
+    target = t;
+    tiles = rows;
+    $modeBadge.textContent = 'chain mode!';
+    $modeBadge.style.background = '#FBEAF0';
+    $modeBadge.style.color = '#993556';
+  }
+
+  $target.textContent = target;
+  $lvlNum.textContent = level;
+  updateXpBar();
+  renderGrid();
+  resetTimer();
+  gameActive = true;
+}
+
+function renderGrid() {
+  $grid.innerHTML = '';
+  tiles.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'tile new-in ' + (t.col === 'op' ? 'op' : t.col);
+    if (selected.find(s => s.id === t.id)) el.classList.add('selected');
+    el.textContent = t.val;
+    el.dataset.id = t.id;
+    el.addEventListener('click', () => toggleTile(t, el));
+    $grid.appendChild(el);
+  });
+  updateSelRow();
+}
+
+function toggleTile(t, el) {
+  const idx = selected.findIndex(s => s.id === t.id);
+  if (idx >= 0) {
+    selected.splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    // Limit selections by mode
+    if (mode === 'sum' && selected.filter(s => s.type === 'num').length >= 6) return;
+    if (mode === 'ops') {
+      const nc = selected.filter(s => s.type === 'num').length;
+      const oc = selected.filter(s => s.type === 'op').length;
+      if (t.type === 'num' && nc >= 2) return;
+      if (t.type === 'op' && oc >= 1) return;
+    }
+    selected.push(t);
+    el.classList.add('selected');
+  }
+  updateSelRow();
+}
+
+// Evaluate selected tiles left-to-right by tile ID order
+function evalChain(sel) {
+  const ordered = [...sel].sort((a, b) => a.id - b.id);
+  const nums = ordered.filter(s => s.type === 'num').map(s => s.val);
+  const ops  = ordered.filter(s => s.type === 'op').map(s => s.val);
+  if (nums.length === 0) return null;
+  if (mode === 'sum') return nums.reduce((a, v) => a + v, 0);
+  if (nums.length < 2 && mode !== 'sum') return nums.length === 1 ? nums[0] : null;
+  let result = nums[0];
+  for (let i = 0; i < ops.length && i < nums.length - 1; i++) {
+    const op = ops[i], n = nums[i + 1];
+    if (op === '+')      result += n;
+    else if (op === '−') result -= n;
+    else if (op === '×') result *= n;
+    else if (op === '÷') { result = n ? Math.round(result / n) : null; }
+    if (result === null) return null;
+  }
+  return result;
+}
+
+// Chip background/text colours per tile colour class
+const CHIP_BG  = ['#CECBF6','#9FE1CB','#FAC775','#F4C0D1','#C0DD97'];
+const CHIP_COL = ['#26215C','#04342C','#412402','#4B1528','#173404'];
+
+function updateSelRow() {
+  if (selected.length === 0) {
+    $selChips.innerHTML = '<span style="font-size:12px;color:#B4B2A9">tap tiles to select</span>';
+    $selVal.textContent = '—';
+    $selVal.className = '';
+    $btnSubmit.disabled = true;
+    return;
+  }
+  const ordered = [...selected].sort((a, b) => a.id - b.id);
+  $selChips.innerHTML = ordered.map(s => {
+    const idx = s.col === 'op' ? -1 : parseInt(s.col.replace('num', ''));
+    const bg  = idx >= 0 ? CHIP_BG[idx]  : '#B5D4F4';
+    const col = idx >= 0 ? CHIP_COL[idx] : '#042C53';
+    return `<span class="chip" style="background:${bg};color:${col}">${s.val}</span>`;
+  }).join('');
+  const res = evalChain(selected);
+  if (res === null) {
+    $selVal.textContent = '?';
+    $selVal.className = '';
+    $btnSubmit.disabled = true;
+  } else {
+    $selVal.textContent = '= ' + res;
+    $selVal.className = res === target ? 'match' : (res > target ? 'over' : '');
+    $btnSubmit.disabled = false;
+  }
+}
+
+function submitAnswer() {
+  const res = evalChain(selected);
+  if (res === target) {
+    streak++;
+    const pts = ptsForSolve();
+    score += pts;
+    xp += pts;
+    if (score > bestScore) bestScore = score;
+    $scoreVal.textContent = score;
+    $bestVal.textContent  = bestScore;
+
+    const msg = streak >= 3 ? 'COMBO x' + streak + '! +' + pts
+              : streak === 2 ? 'Double! +' + pts
+              : 'Correct! +' + pts;
+    const toastColor = streak >= 3 ? '#D85A30' : streak === 2 ? '#BA7517' : '#0F6E56';
+    showToast(msg, toastColor);
+
+    // Animate clearing tiles
+    const selIds = selected.map(s => s.id);
+    selIds.forEach(id => {
+      const el = $grid.querySelector('[data-id="' + id + '"]');
+      if (el) el.classList.add('clearing');
+    });
+
+    setTimeout(() => {
+      tiles = tiles.filter(t => !selIds.includes(t.id));
+      const maxNum = Math.min(3 + level * 2, 25);
+      const ops = ['+', '−', '×'];
+      if (level >= 3) ops.push('÷');
+
+      // Refill board to 25 tiles
+      while (tiles.length < 25) {
+        const isOdd = tiles.length % 2 === 1 && mode !== 'sum';
+        if (isOdd) {
+          tiles.push({ val: ops[rng(0, ops.length - 1)], type: 'op', col: 'op', id: Date.now() + Math.random() });
+        } else {
+          tiles.push({ val: rng(1, maxNum), type: 'num', col: TILE_COLORS[tiles.length % 5], id: Date.now() + Math.random() });
+        }
+      }
+      selected = [];
+
+      // Level up if enough XP
+      if (xp >= xpNeeded()) {
+        xp = 0;
+        level++;
+        genLevel();
+      } else {
+        updateXpBar();
+        renderGrid();
+        updateSelRow();
+      }
+    }, 400);
+
+  } else {
+    // Wrong answer
+    streak = 0;
+    showToast('Not quite! Try again', '#993C1D');
+    $grid.querySelectorAll('.tile.selected').forEach(el => {
+      el.classList.add('wrong');
+      setTimeout(() => el.classList.remove('wrong'), 400);
+    });
+    selected = [];
+    $grid.querySelectorAll('.tile').forEach(el => el.classList.remove('selected'));
+    updateSelRow();
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInt);
+  $timerBar.style.width = '100%';
+  $timerBar.style.background = '#3B6D11';
+  timerInt = setInterval(() => {
+    if (!gameActive) return;
+    timeLeft -= 0.1;
+    const pct = (timeLeft / timerSecs) * 100;
+    $timerBar.style.width = pct + '%';
+    $timerLabel.textContent = Math.ceil(timeLeft) + 's';
+    if (pct < 35) $timerBar.style.background = '#BA7517';
+    if (pct < 15) $timerBar.style.background = '#A32D2D';
+    if (timeLeft <= 0) {
+      clearInterval(timerInt);
+      gameActive = false;
+      gameOver();
+    }
+  }, 100);
+}
+
+function gameOver() {
+  clearInterval(timerInt);
+  gameActive = false;
+  if (score > bestScore) bestScore = score;
+  $overLvl.textContent   = level;
+  $overScore.textContent = score;
+  $overBest.textContent  = bestScore;
+  $gameScreen.style.display = 'none';
+  $overScreen.style.display = 'block';
+}
+
+document.getElementById('btn-restart').addEventListener('click', () => {
+  level = 1; score = 0; xp = 0; streak = 0;
+  $scoreVal.textContent = 0;
+  $bestVal.textContent  = bestScore;
+  $overScreen.style.display  = 'none';
+  $gameScreen.style.display  = 'block';
+  genLevel();
+});
+
+$btnSubmit.addEventListener('click', submitAnswer);
+$btnClear.addEventListener('click', () => {
+  selected = [];
+  $grid.querySelectorAll('.tile').forEach(el => el.classList.remove('selected'));
+  updateSelRow();
+});
+
+// Kick off the game
+genLevel();
+</script>
+</body>
+</html>
