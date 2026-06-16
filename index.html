@@ -1,708 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>MathCrush</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{background:#1a0533;font-family:'Nunito',sans-serif;display:flex;justify-content:center;align-items:flex-start;min-height:100vh}
-
-#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
-#app{position:relative;z-index:1;width:100%;max-width:420px;padding:12px;min-height:100vh}
-
-#header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.hbadge{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:800;letter-spacing:.02em}
-#lvl-badge{background:#7c3aed;color:#e9d5ff;border:2px solid #a855f7}
-#score-badge{background:#0e7490;color:#cffafe;border:2px solid #22d3ee}
-#best-badge{background:#b45309;color:#fef3c7;border:2px solid #fbbf24}
-
-#target-card{
-  background:linear-gradient(135deg,#4c1d95,#7c3aed);
-  border:3px solid #a855f7;border-radius:20px;
-  padding:14px 18px;margin-bottom:10px;
-  text-align:center;position:relative;overflow:hidden
-}
-#target-card::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:rgba(168,85,247,.25);border-radius:50%}
-#target-label{font-size:11px;color:#c4b5fd;letter-spacing:.1em;text-transform:uppercase;font-weight:800;margin-bottom:4px}
-#mode-pill{display:inline-block;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:800;background:rgba(255,255,255,.15);color:#e9d5ff}
-
-#xp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-#xp-wrap{flex:1;height:12px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.15)}
-#xp-fill{height:100%;background:linear-gradient(90deg,#ec4899,#f97316);border-radius:6px;transition:width .4s ease}
-#xp-txt{font-size:11px;color:#f9a8d4;font-weight:800;white-space:nowrap}
-
-#timer-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-#timer-wrap{flex:1;height:10px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.15)}
-#timer-fill{height:100%;background:#22c55e;border-radius:6px;transition:width .1s linear,background .4s}
-#timer-txt{font-size:13px;color:#86efac;font-weight:900;min-width:30px;text-align:right}
-
-#eq-bar{
-  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.2);
-  border-radius:16px;padding:10px 14px;margin-bottom:10px;
-  display:flex;align-items:center;gap:8px;min-height:52px;flex-wrap:wrap
-}
-#eq-chips{display:flex;flex-wrap:wrap;gap:5px;flex:1;align-items:center}
-#eq-chips .placeholder{font-size:13px;color:rgba(255,255,255,.3);font-weight:700}
-#eq-result{font-size:18px;font-weight:900;color:rgba(255,255,255,.5);min-width:54px;text-align:right;white-space:nowrap}
-#eq-result.match{color:#4ade80}
-#eq-result.over{color:#f87171}
-#eq-result.under{color:#fbbf24}
-
-/* 4x4 grid */
-#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-
-.tile{
-  aspect-ratio:1;border-radius:16px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;font-weight:900;
-  cursor:pointer;user-select:none;
-  transition:transform .12s cubic-bezier(.34,1.56,.64,1);
-  border:3px solid transparent;
-  position:relative;overflow:hidden
-}
-.tile::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .1s}
-.tile:active::after{background:rgba(255,255,255,.15)}
-
-/* value-based tile colors: v2–v20 */
-.v2 {background:#e11d48;color:#ffe4e6;border-color:#fb7185}
-.v3 {background:#ea580c;color:#fff7ed;border-color:#fb923c}
-.v4 {background:#d97706;color:#fefce8;border-color:#fbbf24}
-.v5 {background:#65a30d;color:#f7fee7;border-color:#a3e635}
-.v6 {background:#059669;color:#ecfdf5;border-color:#34d399}
-.v7 {background:#0891b2;color:#ecfeff;border-color:#22d3ee}
-.v8 {background:#2563eb;color:#eff6ff;border-color:#60a5fa}
-.v9 {background:#7c3aed;color:#f5f3ff;border-color:#a78bfa}
-.v10{background:#9d174d;color:#fdf2f8;border-color:#f472b6}
-.v11{background:#b91c1c;color:#fef2f2;border-color:#f87171}
-.v12{background:#c2410c;color:#fff7ed;border-color:#fdba74}
-.v13{background:#a16207;color:#fefce8;border-color:#fde047}
-.v14{background:#4d7c0f;color:#f7fee7;border-color:#86efac}
-.v15{background:#0f766e;color:#f0fdfa;border-color:#5eead4}
-.v16{background:#0369a1;color:#f0f9ff;border-color:#7dd3fc}
-.v17{background:#1d4ed8;color:#eff6ff;border-color:#93c5fd}
-.v18{background:#6d28d9;color:#f5f3ff;border-color:#c4b5fd}
-.v19{background:#86198f;color:#fdf4ff;border-color:#e879f9}
-.v20{background:#9f1239;color:#fff1f2;border-color:#fda4af}
-.oc {background:#1e3a5f;color:#bae6fd;border-color:#38bdf8;font-size:26px}
-
-@keyframes target-pulse{0%,100%{text-shadow:0 0 20px rgba(168,85,247,.8)}50%{text-shadow:0 0 40px rgba(168,85,247,1),0 0 60px rgba(236,72,153,.6)}}
-#target-num{font-size:52px;font-weight:900;color:#fff;line-height:1;animation:target-pulse 2s ease-in-out infinite}
-@keyframes hint-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
-#target-card.hint{animation:hint-shake .4s ease}
-
-.tile.sel{transform:scale(1.12) translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4);border-color:#fff !important}
-.tile.bounce{animation:tbounce .3s cubic-bezier(.34,1.56,.64,1)}
-.tile.wrong-anim{animation:twrong .4s ease}
-.tile.pop-out{animation:tpop .4s ease forwards}
-.tile.drop-in{animation:tdrop .35s cubic-bezier(.34,1.56,.64,1)}
-
-@keyframes tbounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2) translateY(-4px)}}
-@keyframes twrong{0%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}100%{transform:translateX(0)}}
-@keyframes tpop{0%{transform:scale(1);opacity:1}40%{transform:scale(1.35);opacity:.8}100%{transform:scale(0);opacity:0}}
-@keyframes tdrop{0%{transform:scale(.5) translateY(-20px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
-
-#btn-row{display:flex;gap:8px}
-.btn{flex:1;padding:13px;border-radius:14px;border:none;font-size:15px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;transition:transform .1s,box-shadow .1s;letter-spacing:.02em}
-.btn:active{transform:scale(.95)}
-#btn-clear{background:#374151;color:#d1d5db;border:2px solid #4b5563}
-#btn-clear:active{background:#4b5563}
-#btn-go{background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;border:2px solid #a855f7;box-shadow:0 4px 15px rgba(236,72,153,.4)}
-#btn-go:disabled{background:#374151;color:#6b7280;border-color:#4b5563;box-shadow:none;cursor:default}
-
-#particle-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
-
-#screen-over{display:none;position:fixed;inset:0;z-index:100;background:rgba(10,0,25,.9);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem}
-#screen-over.show{display:flex}
-.over-card{background:linear-gradient(135deg,#1e1047,#2d1060);border:3px solid #7c3aed;border-radius:24px;padding:2rem;width:100%;max-width:360px}
-.over-star{font-size:64px;margin-bottom:8px;animation:star-spin 1s ease}
-@keyframes star-spin{0%{transform:scale(0) rotate(-180deg)}100%{transform:scale(1) rotate(0)}}
-.over-title{font-size:36px;font-weight:900;color:#e9d5ff;margin-bottom:4px}
-.over-sub{font-size:14px;color:#a78bfa;margin-bottom:20px;font-weight:700}
-.stat-row{display:flex;gap:10px;margin-bottom:10px}
-.stat-box{flex:1;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:12px}
-.stat-box .sl{font-size:11px;color:#a78bfa;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.stat-box .sv{font-size:26px;font-weight:900;color:#fff}
-#btn-restart{width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;font-size:18px;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:4px;letter-spacing:.03em;box-shadow:0 4px 20px rgba(124,58,237,.5)}
-#btn-restart:active{transform:scale(.97)}
-
-@keyframes screen-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-#app.shaking{animation:screen-shake .35s ease}
-
-.score-pop{position:fixed;font-size:24px;font-weight:900;color:#fbbf24;pointer-events:none;z-index:200;text-shadow:0 2px 8px rgba(0,0,0,.5);animation:score-float 1.2s ease forwards}
-@keyframes score-float{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-80px) scale(1.3);opacity:0}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>MathCrush</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<canvas id="bg-canvas"></canvas>
-<canvas id="particle-canvas"></canvas>
+  <!-- Background canvases (z-index 0 and 50) -->
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="particle-canvas"></canvas>
 
-<div id="app">
-  <div id="header">
-    <div class="hbadge" id="lvl-badge">LVL <span id="lvl-num">1</span></div>
-    <div class="hbadge" id="score-badge">⭐ <span id="score-val">0</span></div>
-    <div class="hbadge" id="best-badge">🏆 <span id="best-val">0</span></div>
-  </div>
+  <!-- Main game UI -->
+  <div id="app">
 
-  <div id="target-card">
-    <div id="target-label">make this number</div>
-    <div id="target-num">—</div>
-    <div id="mode-pill">sum mode</div>
-  </div>
-
-  <div id="xp-row">
-    <div id="xp-wrap"><div id="xp-fill" style="width:0%"></div></div>
-    <div id="xp-txt">0 / 300 to level up</div>
-  </div>
-
-  <div id="timer-row">
-    <div id="timer-wrap"><div id="timer-fill"></div></div>
-    <div id="timer-txt">30s</div>
-  </div>
-
-  <div id="eq-bar">
-    <div id="eq-chips"><span class="placeholder">tap tiles to build an equation</span></div>
-    <div id="eq-result">—</div>
-  </div>
-
-  <div id="grid"></div>
-
-  <div id="btn-row">
-    <button class="btn" id="btn-clear">✕ Clear</button>
-    <button class="btn" id="btn-go" disabled>Check it! →</button>
-  </div>
-</div>
-
-<div id="screen-over">
-  <div class="over-card">
-    <div class="over-star">⭐</div>
-    <div class="over-title">Game Over!</div>
-    <div class="over-sub">You reached level <span id="over-lvl">1</span></div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="sl">Score</div><div class="sv" id="over-score">0</div></div>
-      <div class="stat-box"><div class="sl">Best ever</div><div class="sv" id="over-best">0</div></div>
+    <!-- Header: level / score / best -->
+    <div id="header">
+      <div class="hbadge" id="lvl-badge">LVL <span id="lvl-num">1</span></div>
+      <div class="hbadge" id="score-badge">⭐ <span id="score-val">0</span></div>
+      <div class="hbadge" id="best-badge">🏆 <span id="best-val">0</span></div>
     </div>
-    <button id="btn-restart">Play Again 🚀</button>
+
+    <!-- Target number card -->
+    <div id="target-card">
+      <div id="target-label">make this number</div>
+      <div id="target-num">—</div>
+      <div id="mode-pill">sum mode</div>
+    </div>
+
+    <!-- XP progress bar -->
+    <div id="xp-row">
+      <div id="xp-wrap"><div id="xp-fill" style="width:0%"></div></div>
+      <div id="xp-txt">0 / 300 to level up</div>
+    </div>
+
+    <!-- Timer bar -->
+    <div id="timer-row">
+      <div id="timer-wrap"><div id="timer-fill"></div></div>
+      <div id="timer-txt">30s</div>
+    </div>
+
+    <!-- Current equation / selection display -->
+    <div id="eq-bar">
+      <div id="eq-chips">
+        <span class="placeholder">tap tiles to build an equation</span>
+      </div>
+      <div id="eq-result">—</div>
+    </div>
+
+    <!-- 4×4 tile grid (populated by JS) -->
+    <div id="grid"></div>
+
+    <!-- Action buttons -->
+    <div id="btn-row">
+      <button class="btn" id="btn-clear">✕ Clear</button>
+      <button class="btn" id="btn-go" disabled>Check it! →</button>
+    </div>
+
+  </div><!-- /#app -->
+
+  <!-- Game over overlay -->
+  <div id="screen-over">
+    <div class="over-card">
+      <div class="over-star">⭐</div>
+      <div class="over-title">Game Over!</div>
+      <div class="over-sub">You reached level <span id="over-lvl">1</span></div>
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="sl">Score</div>
+          <div class="sv" id="over-score">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="sl">Best ever</div>
+          <div class="sv" id="over-best">0</div>
+        </div>
+      </div>
+      <button id="btn-restart">Play Again 🚀</button>
+    </div>
   </div>
-</div>
 
-<script>
-// ── Audio (louder, with compressor to prevent clipping) ───────────────────────
-const AC = new (window.AudioContext || window.webkitAudioContext)();
-const compressor = AC.createDynamicsCompressor();
-compressor.threshold.value = -6;
-compressor.knee.value = 3;
-compressor.ratio.value = 4;
-compressor.attack.value = 0.002;
-compressor.release.value = 0.1;
-compressor.connect(AC.destination);
+  <!-- JS modules (order matters: audio + visuals before game) -->
+  <script src="js/audio.js"></script>
+  <script src="js/visuals.js"></script>
+  <script src="js/game.js"></script>
 
-function resumeAC(){ if(AC.state==='suspended') AC.resume(); }
-function playTone(freq, type, dur, vol=0.55, attack=0.01){
-  const o=AC.createOscillator(), g=AC.createGain();
-  o.connect(g); g.connect(compressor);
-  o.type=type; o.frequency.setValueAtTime(freq, AC.currentTime);
-  g.gain.setValueAtTime(0, AC.currentTime);
-  g.gain.linearRampToValueAtTime(vol, AC.currentTime+attack);
-  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+dur);
-  o.start(); o.stop(AC.currentTime+dur+0.05);
-}
-function playClick()    { playTone(600,'sine',.09,.5,.005) }
-function playDeselect() { playTone(350,'sine',.07,.4,.005) }
-function playCorrect()  { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.25,.6,.01),i*65)) }
-function playWrong()    { playTone(160,'sawtooth',.18,.55,.01); setTimeout(()=>playTone(120,'sawtooth',.22,.45,.01),90) }
-function playLevelUp()  { [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.4,.65,.01),i*80)) }
-function playGameOver() { [440,370,311,262].forEach((f,i)=>setTimeout(()=>playTone(f,'sawtooth',.35,.5,.01),i*110)) }
-function playTileSelect(val){ const freqs=[0,0,440,466,494,523,554,587,622,659,698,740,784,831,880,932,988,1047,1109,1175,1245]; playTone(freqs[Math.min(val,20)]||500,'triangle',.12,.5,.005) }
-
-// ── Starfield ─────────────────────────────────────────────────────────────────
-const bgC=document.getElementById('bg-canvas'),bgX=bgC.getContext('2d');
-let stars=[];
-function resizeBg(){
-  bgC.width=window.innerWidth;bgC.height=window.innerHeight;
-  stars=Array.from({length:80},()=>({x:Math.random()*bgC.width,y:Math.random()*bgC.height,r:Math.random()*1.8+.3,s:Math.random()*.4+.1,pulse:Math.random()*Math.PI*2}));
-}
-resizeBg();window.addEventListener('resize',resizeBg);
-(function animBg(){
-  bgX.clearRect(0,0,bgC.width,bgC.height);
-  stars.forEach(s=>{s.pulse+=s.s*.03;bgX.beginPath();bgX.arc(s.x,s.y,s.r,0,Math.PI*2);bgX.fillStyle=`rgba(200,170,255,${.4+Math.sin(s.pulse)*.35})`;bgX.fill()});
-  requestAnimationFrame(animBg);
-})();
-
-// ── Particles ─────────────────────────────────────────────────────────────────
-const pC=document.getElementById('particle-canvas'),pX=pC.getContext('2d');
-let particles=[];
-function resizePC(){pC.width=window.innerWidth;pC.height=window.innerHeight;}
-resizePC();window.addEventListener('resize',resizePC);
-const BURST_COLORS=['#a855f7','#ec4899','#fbbf24','#4ade80','#22d3ee','#f97316','#fff'];
-function burst(x,y,colors,count=18){
-  for(let i=0;i<count;i++){
-    const angle=Math.random()*Math.PI*2,speed=3+Math.random()*6;
-    particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-3,r:4+Math.random()*6,color:colors[Math.floor(Math.random()*colors.length)],life:1,decay:.025+Math.random()*.015,gravity:.18,shape:Math.random()>.5?'circle':'star'});
-  }
-}
-function drawStar(ctx,x,y,r,color,alpha){
-  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();
-  for(let i=0;i<5;i++){const a=Math.PI/2+i*Math.PI*2/5,b=a+Math.PI/5;if(i===0)ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a));else ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));ctx.lineTo(x+r*.4*Math.cos(b),y+r*.4*Math.sin(b));}
-  ctx.closePath();ctx.fill();ctx.restore();
-}
-(function animP(){
-  pX.clearRect(0,0,pC.width,pC.height);
-  particles=particles.filter(p=>p.life>0);
-  particles.forEach(p=>{
-    p.x+=p.vx;p.y+=p.vy;p.vy+=p.gravity;p.vx*=.97;p.life-=p.decay;
-    if(p.shape==='star')drawStar(pX,p.x,p.y,p.r,p.color,p.life);
-    else{pX.beginPath();pX.arc(p.x,p.y,p.r,0,Math.PI*2);pX.fillStyle=p.color;pX.globalAlpha=p.life;pX.fill();pX.globalAlpha=1;}
-  });
-  requestAnimationFrame(animP);
-})();
-
-// ── Value → CSS class & chip colour ──────────────────────────────────────────
-// One unique colour per number value 2-20
-const VAL_STYLES = {
-  2: {cls:'v2', bg:'#e11d48', fg:'#ffe4e6'},
-  3: {cls:'v3', bg:'#ea580c', fg:'#fff7ed'},
-  4: {cls:'v4', bg:'#d97706', fg:'#fefce8'},
-  5: {cls:'v5', bg:'#65a30d', fg:'#f7fee7'},
-  6: {cls:'v6', bg:'#059669', fg:'#ecfdf5'},
-  7: {cls:'v7', bg:'#0891b2', fg:'#ecfeff'},
-  8: {cls:'v8', bg:'#2563eb', fg:'#eff6ff'},
-  9: {cls:'v9', bg:'#7c3aed', fg:'#f5f3ff'},
-  10:{cls:'v10',bg:'#9d174d', fg:'#fdf2f8'},
-  11:{cls:'v11',bg:'#b91c1c', fg:'#fef2f2'},
-  12:{cls:'v12',bg:'#c2410c', fg:'#fff7ed'},
-  13:{cls:'v13',bg:'#a16207', fg:'#fefce8'},
-  14:{cls:'v14',bg:'#4d7c0f', fg:'#f7fee7'},
-  15:{cls:'v15',bg:'#0f766e', fg:'#f0fdfa'},
-  16:{cls:'v16',bg:'#0369a1', fg:'#f0f9ff'},
-  17:{cls:'v17',bg:'#1d4ed8', fg:'#eff6ff'},
-  18:{cls:'v18',bg:'#6d28d9', fg:'#f5f3ff'},
-  19:{cls:'v19',bg:'#86198f', fg:'#fdf4ff'},
-  20:{cls:'v20',bg:'#9f1239', fg:'#fff1f2'},
-};
-function valStyle(v){ return VAL_STYLES[v] || {cls:'v9',bg:'#7c3aed',fg:'#f5f3ff'}; }
-const OP_CHIP = {bg:'#38bdf8', fg:'#0c4a6e'};
-const BOARD_SIZE = 16; // 4×4
-
-// ── State ─────────────────────────────────────────────────────────────────────
-let level=1, score=0, xp=0, bestScore=0;
-let target=0, mode='sum', tiles=[], selected=[];
-let timerSecs=30, timeLeft=30, timerInt=null, gameActive=false;
-let idleTimer=null;
-
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-const $grid=document.getElementById('grid');
-const $targetNum=document.getElementById('target-num');
-const $eqChips=document.getElementById('eq-chips');
-const $eqResult=document.getElementById('eq-result');
-const $btnGo=document.getElementById('btn-go');
-const $btnClear=document.getElementById('btn-clear');
-const $scoreVal=document.getElementById('score-val');
-const $bestVal=document.getElementById('best-val');
-const $lvlNum=document.getElementById('lvl-num');
-const $xpFill=document.getElementById('xp-fill');
-const $xpTxt=document.getElementById('xp-txt');
-const $timerFill=document.getElementById('timer-fill');
-const $timerTxt=document.getElementById('timer-txt');
-const $modePill=document.getElementById('mode-pill');
-const $app=document.getElementById('app');
-const $over=document.getElementById('screen-over');
-
-function rng(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function xpNeeded(){return 200+level*100;}
-function timerForLevel(){return Math.max(15,30-Math.floor(level/3));}
-function ptsFor(opCount){return Math.floor((80+level*20)*(1+opCount*.2));}
-
-function resetIdleHint(){
-  clearTimeout(idleTimer);
-  const card=document.getElementById('target-card');
-  card.classList.remove('hint');
-  if(!gameActive) return;
-  idleTimer=setTimeout(()=>{
-    card.classList.add('hint');
-    setTimeout(()=>card.classList.remove('hint'),500);
-  },8000);
-}
-
-// ── Evaluate a sequence of tile objects left-to-right ────────────────────────
-// seq: [{type:'num'|'op', val}...] alternating num op num [op num ...]
-// Returns integer result or null if invalid
-function evalSeq(seq){
-  if(!seq||!seq.length) return null;
-  if(seq[0].type!=='num') return null;
-  // must end on num, alternate types
-  for(let i=0;i<seq.length;i++){
-    if(i%2===0&&seq[i].type!=='num') return null;
-    if(i%2===1&&seq[i].type!=='op') return null;
-  }
-  if(seq[seq.length-1].type!=='num') return null;
-  let r=seq[0].val;
-  for(let i=1;i<seq.length-1;i+=2){
-    const op=seq[i].val,n=seq[i+1].val;
-    if(op==='+') r+=n;
-    else if(op==='-'||op==='−') r-=n;
-    else if(op==='×'||op==='*') r*=n;
-    else if(op==='÷'||op==='/'){if(!n||r%n!==0) return null; r=r/n;}
-  }
-  return r;
-}
-
-// ── Board-first generation ─────────────────────────────────────────────────────
-function genLevel(){
-  if(level>=5)      mode='chain';
-  else if(level>=3) mode='ops';
-  else              mode='sum';
-
-  selected=[];
-  timerSecs=timerForLevel();
-  timeLeft=timerSecs;
-
-  const maxNum=Math.min(3+level*2,20);
-  const opPool=['+','−','×'];
-  if(level>=4) opPool.push('÷');
-
-  let boardTiles=[];
-
-  if(mode==='sum'){
-    // 16 number tiles, all value-coloured
-    for(let i=0;i<BOARD_SIZE;i++){
-      const v=rng(2,maxNum);
-      boardTiles.push({id:i,type:'num',val:v,col:valStyle(v).cls});
-    }
-    $modePill.textContent='+ sum mode';
-
-  } else {
-    // 8 num tiles + 8 op tiles
-    // For chain: exactly 2 of each available operator (lean, not wasteful)
-    // For ops:  pick ops freely but still only 8
-    const nums=[];
-    for(let i=0;i<8;i++){
-      const v=rng(2,maxNum);
-      nums.push({id:i*2,type:'num',val:v,col:valStyle(v).cls});
-    }
-
-    let ops=[];
-    if(mode==='chain'){
-      // 2 of each op, shuffled, trimmed to 8
-      let pool=[];
-      opPool.forEach(op=>{pool.push(op,op);}); // e.g. ['+','+','−','−','×','×','÷','÷']
-      // shuffle
-      for(let i=pool.length-1;i>0;i--){const j=rng(0,i);[pool[i],pool[j]]=[pool[j],pool[i]];}
-      pool=pool.slice(0,8);
-      ops=pool.map((op,i)=>({id:i*2+1,type:'op',val:op,col:'oc'}));
-    } else {
-      for(let i=0;i<8;i++) ops.push({id:i*2+1,type:'op',val:opPool[rng(0,opPool.length-1)],col:'oc'});
-    }
-
-    // Interleave: num, op, num, op … into 16 slots
-    for(let i=0;i<8;i++){
-      boardTiles.push(nums[i]);
-      boardTiles.push(ops[i]);
-    }
-    $modePill.textContent=mode==='ops'?'± ops mode':'chain mode!';
-  }
-
-  const validExprs=findValidExprs(boardTiles,mode,opPool);
-  if(!validExprs.length){ genLevel(); return; }
-
-  const good=validExprs.filter(e=>e.result>=10);
-  const pool2=good.length?good:validExprs;
-  for(let i=pool2.length-1;i>0;i--){const j=rng(0,i);[pool2[i],pool2[j]]=[pool2[j],pool2[i]];}
-  target=pool2[0].result;
-
-  tiles=boardTiles;
-  $targetNum.textContent=target;
-  $lvlNum.textContent=level;
-  updateXp();
-  renderGrid();
-  resetTimer();
-  resetIdleHint();
-  gameActive=true;
-}
-
-// ── Find valid expressions reachable from the current board ──────────────────
-// Returns [{seq:[tile,...], result:number}, ...]
-function findValidExprs(boardTiles,mode,opPool){
-  const results=[];
-  const numTiles=boardTiles.filter(t=>t.type==='num');
-  const opTiles=boardTiles.filter(t=>t.type==='op');
-
-  if(mode==='sum'){
-    // Try all subsets of 2-5 num tiles
-    const n=numTiles.length;
-    for(let mask=1;mask<(1<<n);mask++){
-      const bits=[];
-      for(let b=0;b<n;b++) if(mask&(1<<b)) bits.push(b);
-      if(bits.length<2||bits.length>5) continue;
-      const seq=bits.map(b=>numTiles[b]);
-      const r=seq.reduce((a,t)=>a+t.val,0);
-      if(r>=10) results.push({seq,result:r});
-      if(results.length>=30) break; // cap search
-    }
-  } else {
-    // For ops/chain: try expressions of form N [op N]+ with 1-3 operators
-    // using tiles from the board (each tile used at most once)
-    const maxOps=mode==='chain'?3:1;
-
-    function search(seq,usedIds){
-      const last=seq[seq.length-1];
-      // If seq ends on a num, it's a valid expression
-      if(last.type==='num'&&seq.length>=3){
-        const r=evalSeq(seq);
-        if(r!==null) results.push({seq:[...seq],result:r});
-      }
-      if(results.length>=40) return;
-      const opCount=seq.filter(t=>t.type==='op').length;
-      if(last.type==='num'&&opCount<maxOps){
-        // add an op then a num
-        for(const op of opTiles){
-          if(usedIds.has(op.id)) continue;
-          for(const num of numTiles){
-            if(usedIds.has(num.id)) continue;
-            usedIds.add(op.id);usedIds.add(num.id);
-            seq.push(op,num);
-            search(seq,usedIds);
-            seq.pop();seq.pop();
-            usedIds.delete(op.id);usedIds.delete(num.id);
-            if(results.length>=40) return;
-          }
-        }
-      }
-    }
-
-    // Start with each num tile as first element
-    for(const startNum of numTiles){
-      if(results.length>=40) break;
-      search([startNum],new Set([startNum.id]));
-    }
-  }
-  return results;
-}
-
-// ── Evaluate what the player has currently selected ───────────────────────────
-// selected is kept in tap-order for ops/chain; sum mode order doesn't matter
-function evalSelected(){
-  if(!selected.length) return null;
-  if(mode==='sum'){
-    const nums=selected.filter(s=>s.type==='num');
-    return nums.length>=2 ? nums.reduce((a,s)=>a+s.val,0) : null;
-  }
-  // ops/chain: selected is already in tap order = num op num op ...
-  return evalSeq(selected);
-}
-
-// ── Render ────────────────────────────────────────────────────────────────────
-function renderGrid(){
-  $grid.innerHTML='';
-  tiles.forEach(t=>{
-    const el=document.createElement('div');
-    el.className='tile drop-in '+t.col;
-    if(selected.find(s=>s.id===t.id)) el.classList.add('sel');
-    el.textContent=t.val;
-    el.dataset.id=t.id;
-    el.addEventListener('click',()=>onTileClick(t,el));
-    $grid.appendChild(el);
-  });
-  updateEqBar();
-}
-
-function onTileClick(t,el){
-  resumeAC();
-  resetIdleHint();
-  const idx=selected.findIndex(s=>s.id===t.id);
-  if(idx>=0){
-    // Deselect: only allow removing the LAST tile (keeps sequence valid)
-    if(idx===selected.length-1){
-      selected.pop();
-      el.classList.remove('sel');
-      playDeselect();
-    } else {
-      // Tapping a non-last selected tile in ops/chain is ambiguous — ignore with a flash
-      el.classList.add('wrong-anim');
-      setTimeout(()=>el.classList.remove('wrong-anim'),400);
-    }
-  } else {
-    if(mode==='sum'){
-      // Sum mode: any number tile, up to 5, order irrelevant
-      if(t.type==='op') return;
-      if(selected.filter(s=>s.type==='num').length>=5) return;
-    } else {
-      // Ops/chain mode: must strictly alternate num→op→num→op…
-      // First tile must be a number
-      if(selected.length===0 && t.type!=='num'){
-        el.classList.add('wrong-anim');
-        setTimeout(()=>el.classList.remove('wrong-anim'),400);
-        return;
-      }
-      if(selected.length>0){
-        const lastType=selected[selected.length-1].type;
-        const expectedType=lastType==='num'?'op':'num';
-        if(t.type!==expectedType){
-          el.classList.add('wrong-anim');
-          setTimeout(()=>el.classList.remove('wrong-anim'),400);
-          return;
-        }
-      }
-      // Cap: num op num op num = 5 tiles (2 ops) for ops mode, up to 7 tiles (3 ops) for chain
-      const maxTiles=mode==='chain'?7:5;
-      if(selected.length>=maxTiles) return;
-    }
-    selected.push(t);
-    el.classList.add('sel');
-    el.classList.remove('bounce'); void el.offsetWidth; el.classList.add('bounce');
-    playTileSelect(t.type==='num'?t.val:0);
-  }
-  updateEqBar();
-}
-
-function updateEqBar(){
-  if(!selected.length){
-    const hint=mode==='sum'?'tap numbers that add up to the target':'start with a number, then op, then number…';
-    $eqChips.innerHTML=`<span class="placeholder">${hint}</span>`;
-    $eqResult.textContent='—'; $eqResult.className=''; $btnGo.disabled=true; return;
-  }
-  $eqChips.innerHTML=selected.map(s=>{
-    const st = s.type==='op' ? OP_CHIP : {bg:valStyle(s.val).bg, fg:valStyle(s.val).fg};
-    const bg = st.bg, fg = st.fg || st.color || '#fff';
-    return `<span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;border-radius:8px;font-size:15px;font-weight:900;background:${bg};color:${fg}">${s.val}</span>`;
-  }).join('');
-  const res=evalSelected();
-  if(res===null){$eqResult.textContent='?';$eqResult.className='';$btnGo.disabled=true;}
-  else{
-    $eqResult.textContent='= '+res;
-    $eqResult.className=res===target?'match':res>target?'over':'under';
-    $btnGo.disabled=false;
-  }
-}
-
-// ── Submit answer ─────────────────────────────────────────────────────────────
-function onSubmit(){
-  resumeAC();
-  const res=evalSelected();
-  if(res===target){
-    playCorrect();
-    const opCount=selected.filter(s=>s.type==='op').length;
-    const pts=ptsFor(opCount);
-    score+=pts;xp+=pts;
-    if(score>bestScore) bestScore=score;
-    $scoreVal.textContent=score;$bestVal.textContent=bestScore;
-
-    // Floating +pts
-    const rect=$app.getBoundingClientRect();
-    const pop=document.createElement('div');
-    pop.className='score-pop';pop.textContent='+'+pts+'!';
-    pop.style.left=(rect.left+rect.width/2-30)+'px';
-    pop.style.top=(rect.top+200)+'px';
-    document.body.appendChild(pop);setTimeout(()=>pop.remove(),1200);
-
-    // Particle burst at each selected tile
-    selected.forEach(s=>{
-      const el=$grid.querySelector('[data-id="'+s.id+'"]');
-      if(el){const r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,BURST_COLORS,14);el.classList.add('pop-out');}
-    });
-
-    const removedIds=new Set(selected.map(s=>s.id));
-    selected=[];
-
-    setTimeout(()=>{
-      tiles=tiles.filter(t=>!removedIds.has(t.id));
-      const maxNum=Math.min(3+level*2,20);
-      const opPool=['+','−','×']; if(level>=4) opPool.push('÷');
-
-      while(tiles.length<BOARD_SIZE){
-        const newId=Date.now()+Math.random();
-        if(mode==='sum'){
-          const v=rng(2,maxNum);
-          tiles.push({id:newId,type:'num',val:v,col:valStyle(v).cls});
-        } else {
-          const numCount=tiles.filter(t=>t.type==='num').length;
-          const opCount2=tiles.filter(t=>t.type==='op').length;
-          if(numCount<=opCount2){
-            const v=rng(2,maxNum);
-            tiles.push({id:newId,type:'num',val:v,col:valStyle(v).cls});
-          } else {
-            tiles.push({id:newId,type:'op',val:opPool[rng(0,opPool.length-1)],col:'oc'});
-          }
-        }
-      }
-
-      // Re-verify target is still reachable; if not, pick a new one
-      const exprs=findValidExprs(tiles,mode,opPool);
-      if(exprs.length && !exprs.find(e=>e.result===target)){
-        const good=exprs.filter(e=>e.result>=10);
-        const pick=(good.length?good:exprs)[rng(0,Math.min((good.length||exprs.length)-1,4))];
-        target=pick.result;
-        $targetNum.textContent=target;
-      }
-
-      updateXp();
-      resetIdleHint();
-      if(xp>=xpNeeded()){
-        xp=0; level++;
-        playLevelUp();
-        burst(window.innerWidth/2,window.innerHeight/2,BURST_COLORS,50);
-        genLevel();
-      } else {
-        renderGrid(); updateEqBar();
-      }
-    },380);
-
-  } else {
-    playWrong();
-    $app.classList.remove('shaking');void $app.offsetWidth;$app.classList.add('shaking');
-    setTimeout(()=>$app.classList.remove('shaking'),400);
-    $grid.querySelectorAll('.tile.sel').forEach(el=>{el.classList.add('wrong-anim');el.classList.remove('sel');setTimeout(()=>el.classList.remove('wrong-anim'),400);});
-    selected=[];updateEqBar();
-  }
-}
-
-function updateXp(){
-  const need=xpNeeded();
-  $xpFill.style.width=Math.min(100,(xp/need)*100)+'%';
-  $xpTxt.textContent=xp+' / '+need+' to level up';
-}
-
-function resetTimer(){
-  clearInterval(timerInt);
-  $timerFill.style.width='100%';$timerFill.style.background='#22c55e';
-  timerInt=setInterval(()=>{
-    if(!gameActive) return;
-    timeLeft-=.1;
-    const pct=(timeLeft/timerSecs)*100;
-    $timerFill.style.width=pct+'%';
-    $timerTxt.textContent=Math.ceil(timeLeft)+'s';
-    if(pct<40) $timerFill.style.background='#f59e0b';
-    if(pct<15) $timerFill.style.background='#ef4444';
-    if(timeLeft<=0){clearInterval(timerInt);gameActive=false;gameOver();}
-  },100);
-}
-
-function gameOver(){
-  clearTimeout(idleTimer);
-  playGameOver();
-  if(score>bestScore) bestScore=score;
-  document.getElementById('over-lvl').textContent=level;
-  document.getElementById('over-score').textContent=score;
-  document.getElementById('over-best').textContent=bestScore;
-  $over.classList.add('show');
-}
-
-document.getElementById('btn-restart').addEventListener('click',()=>{
-  resumeAC();level=1;score=0;xp=0;
-  $scoreVal.textContent=0;$bestVal.textContent=bestScore;
-  $over.classList.remove('show');genLevel();
-});
-$btnGo.addEventListener('click',onSubmit);
-$btnClear.addEventListener('click',()=>{
-  resumeAC();selected=[];
-  $grid.querySelectorAll('.tile').forEach(el=>el.classList.remove('sel'));
-  updateEqBar();playDeselect();
-});
-
-genLevel();
-</script>
 </body>
 </html>
